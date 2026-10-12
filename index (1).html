@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FizHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F6F8; --surface:#FFFFFF; --soft:#ECEEF2; --ink:#14161B; --muted:#6A7080; --faint:#9BA1AE;
+  --line:#E2E5EA; --accent:#2F43C8; --on-accent:#FFFFFF; --accent-tint:rgba(47,67,200,.07);
+  --ok:#1C7A50; --bad:#C23B33; --ok-tint:rgba(28,122,80,.06); --bad-tint:rgba(194,59,51,.06);
+  --nav:rgba(245,246,248,.82);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171C; --surface:#1D2026; --soft:#262A31; --ink:#ECEEF2; --muted:#9AA0AD; --faint:#6E7480;
+    --line:#2C3038; --accent:#93A4FF; --on-accent:#121524; --accent-tint:rgba(147,164,255,.1);
+    --ok:#6FD0A0; --bad:#FF8C83; --ok-tint:rgba(111,208,160,.08); --bad-tint:rgba(255,140,131,.08);
+    --nav:rgba(21,23,28,.82);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171C; --surface:#1D2026; --soft:#262A31; --ink:#ECEEF2; --muted:#9AA0AD; --faint:#6E7480;
+  --line:#2C3038; --accent:#93A4FF; --on-accent:#121524; --accent-tint:rgba(147,164,255,.1);
+  --ok:#6FD0A0; --bad:#FF8C83; --ok-tint:rgba(111,208,160,.08); --bad-tint:rgba(255,140,131,.08);
+  --nav:rgba(21,23,28,.82);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;color:var(--ink);background:var(--bg);font-family:'Golos Text',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.app{max-width:520px;margin:0 auto;padding:28px 22px 120px;min-height:100vh}
+
+/* формулы */
+.fx{font-family:'STIX Two Text','Cambria Math','Times New Roman',serif;font-style:italic;font-weight:400;white-space:nowrap}
+.fx sub,.fx sup{font-size:.6em;font-style:normal}
+.fx .n{font-style:normal}
+.fx .eq,.fx .op{font-style:normal;margin:0 .24em;color:var(--muted)}
+.fx .dot{font-style:normal;margin:0 .06em;color:var(--muted)}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.88em;margin:0 .08em}
+.frac>span{padding:0 .22em;line-height:1.28}
+.frac>span:first-child{border-bottom:1.2px solid currentColor}
+.rt{display:inline-flex;align-items:stretch;vertical-align:middle}
+.rt .rs{font-style:normal;font-size:1.12em;line-height:1}
+.rt .rad{border-top:1.2px solid currentColor;padding:.1em .12em 0;display:inline-flex;align-items:center}
+.big{font-size:2.2rem;line-height:1.3}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:30px 24px;margin:18px 0;overflow-x:auto}
+
+/* главная */
+.head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:44px}
+.logo{font-family:'Golos Text',system-ui,sans-serif;font-style:normal;font-weight:600;font-size:1.3rem;line-height:1;margin:0;letter-spacing:-.02em}
+.streak{color:var(--muted);font-size:.88rem}
+.hero{margin:0 0 30px}
+.hero .fx{font-size:3.6rem;line-height:1.15;letter-spacing:-.01em}
+.hero p{margin:18px 0 0;font-size:1.15rem;line-height:1.45;max-width:22em}
+.lead{margin:0 0 28px;color:var(--muted);font-size:.95rem;max-width:32em}
+.title{font-size:1.7rem;font-weight:600;letter-spacing:-.02em;margin:0 0 6px;line-height:1.2}
+.status{margin:0 0 14px;color:var(--muted);font-size:.92rem}
+h2{font-size:.9rem;font-weight:500;color:var(--muted);margin:44px 0 6px}
+.hint{color:var(--faint);font-size:.86rem;margin:10px 0 0}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:14px 18px;font-weight:500;min-height:52px;transition:background .15s,border-color .15s}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.4;cursor:default;filter:none}
+.pick{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-top:10px;transition:border-color .15s}
+.pick:hover{border-color:var(--faint)}
+.pick .pl{display:block;color:var(--faint);font-size:.8rem}
+.pick .pv{display:block;font-weight:500;margin-top:1px}
+.pick .pd{display:block;color:var(--muted);font-size:.86rem;margin-top:2px}
+.chev{flex:none;color:var(--faint)}
+.pop-bg{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,10,14,.42)}
+.pop-bg.anim{animation:popfade .2s ease}
+.pop-bg.anim .pop{animation:popup .26s cubic-bezier(.2,.8,.2,1)}
+.pop{width:100%;max-width:520px;max-height:82vh;overflow-y:auto;background:var(--surface);border-radius:22px 22px 0 0;padding:10px 22px calc(18px + env(safe-area-inset-bottom,0px))}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 16px}
+.pop h3{font-size:1.1rem;font-weight:600;margin:0}
+.pop .psub{color:var(--muted);font-size:.88rem;margin:2px 0 8px}
+.row{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:14px 0}
+.row:last-of-type{border-bottom:0}
+.row .ot{display:block;font-weight:500}
+.row .od{display:block;color:var(--muted);font-size:.86rem;margin-top:1px}
+.row .rc{margin-left:auto;color:var(--faint);font-size:.84rem;white-space:nowrap}
+.mark{flex:none;width:22px;height:22px;border:1.5px solid var(--faint);border-radius:7px;display:grid;place-items:center;color:var(--on-accent)}
+.mark.radio{border-radius:50%}
+.mark svg{opacity:0}
+.row.on .mark{background:var(--accent);border-color:var(--accent)}
+.row.on .mark svg{opacity:1}
+.row.all{border-bottom:1px solid var(--line)}
+.pop .btn{margin-top:14px}
+@keyframes popfade{from{opacity:0}}
+@keyframes popup{from{transform:translateY(40px);opacity:.4}}
+@media (min-width:640px){.pop-bg{align-items:center}.pop{border-radius:22px;padding-bottom:22px}.grab{display:none}}
+.back{margin:-8px 0 10px}
+.ask{color:var(--muted);font-size:.92rem;margin:4px 0 0}
+.big-n{font-weight:600;white-space:nowrap}
+.bosstag{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:.86rem;font-weight:500;margin:0 0 8px}
+.steps{margin:6px 0 0;padding-left:1.2em}
+.steps li{margin:6px 0;padding-left:2px}
+.cupline{display:flex;align-items:center;gap:8px;color:var(--accent);font-weight:600}
+.cupbig{display:flex;align-items:center;gap:14px;background:var(--accent-tint);border-radius:16px;padding:16px 18px;margin:18px 0 0;color:var(--accent)}
+.cupbig svg{width:40px;height:40px;flex:none}
+.cupbig p{margin:0;color:var(--ink)}
+.bosses{border-top:1px solid var(--line);margin-top:14px}
+.boss{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:15px 0}
+.boss .pl{display:block;color:var(--faint);font-size:.8rem}
+.boss .pv{display:block;font-weight:500}
+.boss:hover .pv{color:var(--accent)}
+.bst{display:inline-flex;align-items:center;gap:5px;font-size:.82rem;color:var(--muted);white-space:nowrap}
+.bst.new{color:var(--faint)}
+.bst.cup{color:var(--accent);font-weight:500}
+.bst svg{width:16px;height:16px}
+.tdet{border-bottom:1px solid var(--line)}
+.tdet summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0;cursor:pointer;list-style:none}
+.tdet summary::-webkit-details-marker{display:none}
+.tdet .pl{display:block;color:var(--faint);font-size:.8rem}
+.tdet .pv{display:block;font-weight:500}
+.tside{display:flex;align-items:center;gap:6px;flex:none}
+.dchev{color:var(--faint);transition:transform .2s}
+.tdet[open] .dchev{transform:rotate(180deg)}
+.tbody{padding:0 0 16px}
+.tbody h3{font-size:.84rem;font-weight:500;color:var(--muted);margin:16px 0 4px}
+.tbody .fx{font-size:1.3rem}
+.bst.ok{color:var(--ok)}
+.empty{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:14px}
+.empty p{margin:0 0 8px}
+.empty .btn{margin-top:8px}
+.seg{display:inline-flex;background:var(--soft);border-radius:12px;padding:3px;margin:4px 0 6px}
+.seg button{border:0;background:none;border-radius:9px;padding:8px 16px;font-size:.92rem;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.utab{width:100%;border-collapse:collapse;margin-top:10px;font-size:.9rem}
+.utab th{text-align:left;font-weight:500;color:var(--faint);font-size:.8rem;padding:0 8px 6px 0;border-bottom:1px solid var(--line)}
+.utab td{padding:9px 8px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.utab td:last-child{color:var(--muted)}
+.conv{list-style:none;margin:6px 0 0;padding:0}
+.conv li{padding:6px 0}
+.conv .ceq{display:block;font-weight:500}
+.conv .about{margin:2px 0 0}
+.ref .fitem .fname{font-weight:500}
+.tabnote{color:var(--muted);font-size:.9rem;margin:12px 0 0;min-height:2.9em}
+.home h2{margin-top:30px}
+.start{margin-top:32px}
+.modes{border-top:1px solid var(--line)}
+.mode{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:18px 0}
+.mode:hover .mname{color:var(--accent)}
+.mname{font-weight:500;font-size:1.02rem;transition:color .15s}
+.mdesc{color:var(--muted);font-size:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:1px solid transparent;background:var(--soft);border-radius:999px;padding:8px 15px;font-size:.9rem;color:var(--muted);transition:background .15s,color .15s}
+.chip.on{background:var(--ink);color:var(--bg)}
+.link{background:none;border:0;padding:8px 0;color:var(--muted);font-size:.9rem}
+.link:hover{color:var(--ink)}
+.reset{margin-top:36px}
+.reset .link{color:var(--faint)}
+
+/* вопрос */
+.qtop{display:flex;justify-content:space-between;align-items:center}
+.count{color:var(--muted);font-size:.88rem;font-variant-numeric:tabular-nums}
+.bar{height:2px;background:var(--line);border-radius:2px;overflow:hidden;margin:10px 0 34px}
+.bar span{display:block;height:100%;background:var(--ink);transition:width .4s ease}
+.modename{color:var(--faint);font-size:.86rem;margin:0 0 8px}
+.qtext{font-size:1.18rem;line-height:1.5;margin:0 0 8px;letter-spacing:-.005em}
+.fname{font-weight:600}
+.opts{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.opt{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:15px 18px;min-height:54px;transition:border-color .15s}
+.opt:hover:not(:disabled){border-color:var(--faint)}
+.opt.right{border-color:var(--ok);background:var(--ok-tint)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-tint)}
+.opt:disabled{cursor:default}
+.opt:disabled:not(.right):not(.wrong){opacity:.55}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.ph{font-family:'Golos Text',system-ui,sans-serif;font-style:normal;font-size:.95rem;color:var(--faint)}
+.build .fx{white-space:normal}
+.pal{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:8px;margin-top:10px}
+.key{min-height:52px;border:0;background:var(--soft);border-radius:12px;font-size:1.25rem;padding:4px;transition:background .12s}
+.key:active{background:var(--line)}
+.key.v{background:var(--surface);border:1px solid var(--line);font-family:'STIX Two Text','Times New Roman',serif;font-style:italic}
+.key.v sub{font-size:.6em;font-style:normal}
+.palabel{color:var(--faint);font-size:.84rem;margin:20px 0 0}
+.acts{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-top:22px}
+.fb{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:16px 18px;margin:22px 0 0}
+.fb .fbt{display:flex;align-items:center;gap:8px}
+.fb .fbt::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none}
+.fb.bad .fbt::before,.fb.note .fbt::before{background:var(--bad)}
+.fb.note{background:transparent}
+.fbt{font-weight:600;margin:0 0 4px}
+.fbx p{margin:8px 0;color:var(--ink)}
+.fbx .fx{font-size:1.35rem}
+.fb.final .fbt::before{background:var(--accent)}
+.fbx h3{font-size:.84rem;font-weight:500;color:var(--muted);margin:18px 0 4px}
+.fbx h3:first-child{margin-top:8px}
+.fbx .small{color:var(--muted);font-size:.88rem}
+.forms{list-style:none;margin:8px 0 0;padding:0}
+.forms li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line)}
+.forms li .fx{font-size:1.2rem}
+.forms li>span:last-child{color:var(--muted);font-size:.84rem;text-align:right}
+.about{color:var(--muted);font-size:.9rem;margin:6px 0 0}
+.fbrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.next{margin-top:18px}
+
+/* итог */
+.endscore{font-family:'STIX Two Text','Times New Roman',serif;font-style:italic;font-size:4rem;line-height:1;margin:0 0 12px;letter-spacing:-.02em}
+.endlist{padding:0;margin:8px 0 0;list-style:none;border-top:1px solid var(--line)}
+.endlist li{padding:12px 0;border-bottom:1px solid var(--line)}
+.stack{display:flex;flex-direction:column;gap:10px;margin-top:32px}
+
+/* справочник */
+.ref h2{margin-top:40px}
+.fitem{padding:18px 0;border-bottom:1px solid var(--line)}
+.fitem:first-of-type{border-top:1px solid var(--line)}
+.fhead{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.fhead .fname{font-weight:500}
+.fstate{font-size:.78rem;color:var(--faint);white-space:nowrap}
+.fstate.learned{color:var(--ok)}
+.fstate.due{color:var(--bad)}
+.fitem>.fx{font-size:1.6rem;display:inline-block;margin:10px 0 6px}
+.legend{margin:2px 0 0;padding:0;list-style:none;color:var(--muted);font-size:.88rem}
+.legend li{padding:1px 0}
+.legend .fx{font-size:1.02rem;color:var(--ink);margin:0}
+
+/* навигация */
+.nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:4px;background:var(--nav);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));z-index:5}
+.nav button{flex:0 1 200px;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;border-radius:12px;padding:6px 10px 4px;font-weight:500;font-size:.78rem;color:var(--faint);transition:color .15s}
+.nav button svg{display:block}
+.nav button.on{color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.9rem;max-width:90vw;z-index:10;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:380px){.big{font-size:1.85rem}.hero .fx{font-size:3rem}.app{padding-left:18px;padding-right:18px}}
+</style>
+</head>
+<body>
+<main class="app" id="app"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+'use strict';
+/* ===== Telegram Mini App ===== */
+const tg=(window.Telegram&&window.Telegram.WebApp)||null;
+const inTG=!!(tg&&tg.initData);
+const tgAtLeast=v=>inTG&&typeof tg.isVersionAtLeast==='function'&&tg.isVersionAtLeast(v);
+function haptic(kind){if(!tgAtLeast('6.1'))return;try{if(kind==='ok'||kind==='bad')tg.HapticFeedback.notificationOccurred(kind==='ok'?'success':'error');else tg.HapticFeedback.impactOccurred('light');}catch(e){}}
+function applyTgTheme(){
+  if(!inTG)return;
+  document.documentElement.setAttribute('data-theme',tg.colorScheme==='dark'?'dark':'light');
+  const bg=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  if(tgAtLeast('6.9')){try{tg.setHeaderColor(bg);tg.setBackgroundColor(bg);}catch(e){}}
+}
+if(inTG){
+  tg.ready();tg.expand();
+  if(tgAtLeast('7.7')){try{tg.disableVerticalSwipes();}catch(e){}}
+  applyTgTheme();
+  tg.onEvent('themeChanged',applyTgTheme);
+}
+
+/* ===== Учебный контент ===== */
+const D=(m=0,kg=0,s=0,A=0,K=0)=>[m,kg,s,A,K];
+const Q={
+  m:{s:'m',n:'масса',u:'кг',d:D(0,1)},
+  m1:{s:'m<sub>1</sub>',n:'масса первого тела',u:'кг',d:D(0,1)},
+  m2:{s:'m<sub>2</sub>',n:'масса второго тела',u:'кг',d:D(0,1)},
+  v:{s:'v',n:'скорость',u:'м/с',d:D(1,0,-1)},
+  a:{s:'a',n:'ускорение',u:'м/с²',d:D(1,0,-2)},
+  F:{s:'F',n:'сила',u:'Н',d:D(1,1,-2)},
+  t:{s:'t',n:'время',u:'с',d:D(0,0,1)},
+  s:{s:'s',n:'путь',u:'м',d:D(1)},
+  h:{s:'h',n:'высота',u:'м',d:D(1)},
+  x:{s:'x',n:'удлинение пружины',u:'м',d:D(1)},
+  r:{s:'r',n:'расстояние между телами',u:'м',d:D(1)},
+  Ek:{s:'E<sub>к</sub>',n:'кинетическая энергия',u:'Дж',d:D(2,1,-2)},
+  Ep:{s:'E<sub>п</sub>',n:'потенциальная энергия',u:'Дж',d:D(2,1,-2)},
+  A:{s:'A',n:'работа',u:'Дж',d:D(2,1,-2)},
+  N:{s:'N',n:'мощность',u:'Вт',d:D(2,1,-3)},
+  p:{s:'p',n:'импульс',u:'кг·м/с',d:D(1,1,-1)},
+  pr:{s:'p',n:'давление',u:'Па',d:D(-1,1,-2)},
+  S:{s:'S',n:'площадь',u:'м²',d:D(2)},
+  rho:{s:'ρ',n:'плотность',u:'кг/м³',d:D(-3,1)},
+  V:{s:'V',n:'объём',u:'м³',d:D(3)},
+  k:{s:'k',n:'жёсткость пружины',u:'Н/м',d:D(0,1,-2)},
+  g:{s:'g',n:'ускорение свободного падения',u:'м/с²',d:D(1,0,-2)},
+  G:{s:'G',n:'гравитационная постоянная',u:'Н·м²/кг²',d:D(3,-1,-2)},
+  I:{s:'I',n:'сила тока',u:'А',d:D(0,0,0,1)},
+  U:{s:'U',n:'напряжение',u:'В',d:D(2,1,-3,-1)},
+  R:{s:'R',n:'сопротивление',u:'Ом',d:D(2,1,-3,-2)},
+  q:{s:'q',n:'заряд',u:'Кл',d:D(0,0,1,1)},
+  Q:{s:'Q',n:'количество теплоты',u:'Дж',d:D(2,1,-2)},
+  c:{s:'c',n:'удельная теплоёмкость',u:'Дж/(кг·°C)',d:D(2,0,-2,0,-1)},
+  v0:{s:'v<sub>0</sub>',n:'начальная скорость',u:'м/с',d:D(1,0,-1)},
+  t1:{s:'t<sub>1</sub>',n:'начальная температура',u:'°C',d:D(0,0,0,0,1)},
+  t2:{s:'t<sub>2</sub>',n:'конечная температура',u:'°C',d:D(0,0,0,0,1)},
+  L:{s:'L',n:'дальность полёта',u:'м',d:D(1)},
+  vy:{s:'v<sub>y</sub>',n:'вертикальная скорость',u:'м/с',d:D(1,0,-1)},
+  Rc:{s:'R',n:'радиус окружности',u:'м',d:D(1)},
+  ac:{s:'a<sub>ц</sub>',n:'центростремительное ускорение',u:'м/с²',d:D(1,0,-2)},
+  om:{s:'ω',n:'угловая скорость',u:'рад/с',d:D(0,0,-1)},
+  pi:{s:'π',n:'число пи',u:'≈ 3,14',d:D()},
+  Anuc:{s:'A',n:'массовое число (число нуклонов)',u:'',d:D()},
+  Z:{s:'Z',n:'зарядовое число (число протонов)',u:'',d:D()},
+  Nn:{s:'N',n:'число нейтронов',u:'',d:D()},
+  el:{s:'e',n:'элементарный заряд',u:'Кл',d:D(0,0,1,1)},
+  dm:{s:'Δm',n:'дефект масс',u:'кг',d:D(0,1)},
+  cl:{s:'c',n:'скорость света',u:'м/с',d:D(1,0,-1)},
+  Eb:{s:'E',n:'энергия связи',u:'Дж',d:D(2,1,-2)},
+  nh:{s:'n',n:'число периодов полураспада',u:'',d:D()},
+  Th:{s:'T<sub>½</sub>',n:'период полураспада',u:'с',d:D(0,0,1)},
+  Ff:{s:'F',n:'фокусное расстояние',u:'м',d:D(1)},
+  Dopt:{s:'D',n:'оптическая сила',u:'дптр',d:D(-1)},
+  dl:{s:'d',n:'расстояние от предмета до линзы',u:'м',d:D(1)},
+  fl:{s:'f',n:'расстояние от линзы до изображения',u:'м',d:D(1)},
+  Gam:{s:'Γ',n:'увеличение линзы',u:'',d:D()},
+  nr:{s:'n',n:'показатель преломления',u:'',d:D()},
+  lam:{s:'λ',n:'длина волны',u:'м',d:D(1)},
+  nu:{s:'ν',n:'частота',u:'Гц',d:D(0,0,-1)},
+  T:{s:'T',n:'период',u:'с',d:D(0,0,1)},
+  Pe:{s:'P',n:'мощность тока',u:'Вт',d:D(2,1,-3)}
+};
+const CONST=new Set(['g','G','pi','el','cl']);
+const TOPICS=[
+  {id:'kin',n:'Кинематика'},{id:'dyn',n:'Динамика'},{id:'cons',n:'Законы сохранения'},
+  {id:'hydro',n:'Давление и плотность'},{id:'therm',n:'Тепловые явления'},
+  {id:'el',n:'Электричество'},{id:'osc',n:'Колебания и волны'},
+  {id:'opt',n:'Оптика'},
+  {id:'nuc',n:'Ядерная физика'}
+];
+// Каждая формула: lhs = c · Π(величина^степень)
+// Простые законы: lhs = c · Π(величина^степень) — поле e.
+// Законы с суммами и разностями: поле rhs (запись через пробелы) и forms — как выразить другие величины.
+const F=[
+  {id:'speed',topic:'kin',name:'Скорость равномерного движения',lhs:'v',e:{s:1,t:-1}},
+  {id:'accel',topic:'kin',name:'Ускорение при равноускоренном движении',lhs:'a',rhs:'( v - v0 ) / t',
+    forms:{v:'v0 + a t',v0:'v - a t',t:'( v - v0 ) / a'},gt:[['v','v0']],qn:{v:'конечная скорость'}},
+  {id:'disp',topic:'kin',name:'Перемещение при равноускоренном движении',lhs:'s',rhs:'v0 t + a t ² / 2',
+    forms:{v0:'s / t - a t / 2',a:'2 ( s - v0 t ) / t ²'},qn:{s:'перемещение'}},
+  {id:'freefall',topic:'kin',name:'Высота падения из состояния покоя',lhs:'h',c:[1,2],e:{g:1,t:2}},
+  {id:'hthrow',topic:'kin',name:'Дальность полёта при броске горизонтально',lhs:'L',e:{v0:1,t:1},qn:{v0:'начальная (горизонтальная) скорость',t:'время полёта'}},
+  {id:'hrange',topic:'kin',name:'Дальность полёта по высоте броска',lhs:'L',rhs:'v0 √ ( 2 h / g )',
+    forms:{v0:'L / √ ( 2 h / g )',h:'g L ² / ( 2 v0 ² )'},qn:{v0:'начальная (горизонтальная) скорость',h:'высота броска'}},
+  {id:'vfall',topic:'kin',name:'Вертикальная скорость тела, брошенного горизонтально',lhs:'vy',e:{g:1,t:1},qn:{t:'время полёта'}},
+  {id:'vcirc',topic:'kin',name:'Скорость при движении по окружности',lhs:'v',c:[2,1],e:{pi:1,Rc:1,T:-1},qn:{v:'линейная скорость',T:'период обращения'}},
+  {id:'omega',topic:'kin',name:'Угловая скорость',lhs:'om',c:[2,1],e:{pi:1,T:-1},qn:{T:'период обращения'}},
+  {id:'vomega',topic:'kin',name:'Связь линейной и угловой скорости',lhs:'v',e:{om:1,Rc:1},qn:{v:'линейная скорость'}},
+  {id:'acirc',topic:'kin',name:'Центростремительное ускорение',lhs:'ac',e:{v:2,Rc:-1},qn:{v:'линейная скорость'}},
+  {id:'acomega',topic:'kin',name:'Центростремительное ускорение через угловую скорость',lhs:'ac',e:{om:2,Rc:1}},
+  {id:'newton2',topic:'dyn',name:'Второй закон Ньютона',lhs:'F',e:{m:1,a:1}},
+  {id:'weight',topic:'dyn',name:'Сила тяжести',lhs:'F',e:{m:1,g:1},qn:{F:'сила тяжести'}},
+  {id:'hooke',topic:'dyn',name:'Закон Гука',lhs:'F',e:{k:1,x:1},qn:{F:'сила упругости'}},
+  {id:'grav',topic:'dyn',name:'Закон всемирного тяготения',lhs:'F',e:{G:1,m1:1,m2:1,r:-2},qn:{F:'сила притяжения'}},
+  {id:'momentum',topic:'cons',name:'Импульс тела',lhs:'p',e:{m:1,v:1}},
+  {id:'ek',topic:'cons',name:'Кинетическая энергия',lhs:'Ek',c:[1,2],e:{m:1,v:2}},
+  {id:'ep',topic:'cons',name:'Потенциальная энергия тела над землёй',lhs:'Ep',e:{m:1,g:1,h:1}},
+  {id:'work',topic:'cons',name:'Механическая работа',lhs:'A',e:{F:1,s:1}},
+  {id:'power',topic:'cons',name:'Мощность',lhs:'N',e:{A:1,t:-1}},
+  {id:'density',topic:'hydro',name:'Плотность вещества',lhs:'rho',e:{m:1,V:-1}},
+  {id:'pressure',topic:'hydro',name:'Давление твёрдого тела',lhs:'pr',e:{F:1,S:-1},qn:{F:'сила давления'}},
+  {id:'hydrop',topic:'hydro',name:'Давление жидкости на глубине',lhs:'pr',e:{rho:1,g:1,h:1},qn:{h:'глубина'}},
+  {id:'archimedes',topic:'hydro',name:'Сила Архимеда',lhs:'F',e:{rho:1,g:1,V:1},qn:{F:'сила Архимеда',rho:'плотность жидкости',V:'объём погружённой части тела'}},
+  {id:'heat',topic:'therm',name:'Количество теплоты при нагревании',lhs:'Q',rhs:'c m ( t2 - t1 )',
+    forms:{c:'Q / ( m ( t2 - t1 ) )',m:'Q / ( c ( t2 - t1 ) )',t2:'t1 + Q / ( c m )',t1:'t2 - Q / ( c m )'},gt:[['t2','t1']]},
+  {id:'ohm',topic:'el',name:'Закон Ома для участка цепи',lhs:'I',e:{U:1,R:-1}},
+  {id:'charge',topic:'el',name:'Заряд, прошедший по проводнику',lhs:'q',e:{I:1,t:1}},
+  {id:'pel',topic:'el',name:'Мощность электрического тока',lhs:'Pe',e:{U:1,I:1}},
+  {id:'joule',topic:'el',name:'Закон Джоуля — Ленца',lhs:'Q',e:{I:2,R:1,t:1}},
+  {id:'wave',topic:'osc',name:'Скорость волны',lhs:'v',e:{lam:1,nu:1}},
+  {id:'period',topic:'osc',name:'Период и частота',lhs:'T',e:{nu:-1}},
+  {id:'lenspower',topic:'opt',name:'Оптическая сила линзы',lhs:'Dopt',e:{Ff:-1}},
+  {id:'thinlens',topic:'opt',name:'Формула тонкой линзы',lhs:'Ff',rhs:'dl fl / ( dl + fl )',forms:{dl:'Ff fl / ( fl - Ff )',fl:'Ff dl / ( dl - Ff )'}},
+  {id:'magnif',topic:'opt',name:'Увеличение линзы',lhs:'Gam',e:{fl:1,dl:-1}},
+  {id:'refr',topic:'opt',name:'Показатель преломления',lhs:'nr',e:{cl:1,v:-1},qn:{v:'скорость света в среде'}},
+  {id:'lightwave',topic:'opt',name:'Длина световой волны',lhs:'lam',e:{cl:1,nu:-1},qn:{nu:'частота света'}},
+  {id:'nucleons',topic:'nuc',name:'Состав атомного ядра',lhs:'Anuc',rhs:'Z + Nn',forms:{Z:'Anuc - Nn',Nn:'Anuc - Z'}},
+  {id:'nuccharge',topic:'nuc',name:'Заряд атомного ядра',lhs:'q',e:{Z:1,el:1},qn:{q:'заряд ядра'}},
+  {id:'binding',topic:'nuc',name:'Энергия связи ядра',lhs:'Eb',e:{dm:1,cl:2}},
+  {id:'halflife',topic:'nuc',name:'Число периодов полураспада',lhs:'nh',e:{t:1,Th:-1},qn:{t:'время распада'}}
+];
+const ABOUT={"speed": {"about": "Показывает, какой путь тело проходит за единицу времени, если движется с постоянной скоростью.", "use": "Скорость, путь или время в задачах на равномерное движение: поезд, пешеход, автомобиль."}, "accel": {"about": "Ускорение показывает, на сколько меняется скорость за каждую секунду. Из конечной скорости вычитают начальную и делят на время, за которое скорость изменилась.", "use": "Ускорение при разгоне или торможении, скорость в любой момент времени, время разгона."}, "disp": {"about": "Перемещение складывается из двух частей: v₀·t — путь, который тело прошло бы с начальной скоростью, и a·t²/2 — добавка за счёт ускорения.", "use": "Путь при разгоне или торможении, начальную скорость, ускорение по известному пути."}, "freefall": {"about": "Тело, отпущенное без начальной скорости, падает с ускорением g. Высота растёт пропорционально квадрату времени: за вдвое большее время тело пролетает в 4 раза больше.", "use": "Высоту падения по времени и время падения с известной высоты."}, "newton2": {"about": "Сила сообщает телу ускорение. Чем больше сила, тем больше ускорение; чем больше масса, тем труднее изменить скорость тела.", "use": "Силу, массу или ускорение тела. Это основа почти всех задач динамики."}, "weight": {"about": "Земля притягивает каждое тело с силой, пропорциональной его массе. У поверхности Земли g ≈ 9,8 м/с² одинаково для всех тел.", "use": "Силу тяжести по массе или массу по силе тяжести."}, "hooke": {"about": "Сила упругости пропорциональна удлинению пружины: растянешь вдвое сильнее — пружина потянет обратно вдвое сильнее. Жёсткость k показывает, насколько тугая пружина.", "use": "Силу упругости, жёсткость пружины, удлинение под нагрузкой."}, "grav": {"about": "Любые два тела притягиваются. Сила растёт с массами и быстро убывает с расстоянием: если расстояние увеличить вдвое, сила станет в 4 раза меньше.", "use": "Силу притяжения планет и спутников, массу планеты, расстояние между телами."}, "momentum": {"about": "Импульс — это «количество движения»: чем тяжелее тело и чем быстрее оно движется, тем труднее его остановить. Направлен так же, как скорость.", "use": "Импульс тела, а вместе с законом сохранения импульса — скорости тел после столкновения или выстрела."}, "ek": {"about": "Энергия движущегося тела. Она зависит от квадрата скорости: при удвоении скорости энергия растёт в 4 раза. Поэтому так опасна высокая скорость на дороге.", "use": "Энергию тела, его скорость или массу, а вместе с законом сохранения энергии — скорость в конце падения."}, "ep": {"about": "Энергия тела, поднятого над землёй. Чем выше и тяжелее тело, тем больше работы совершит сила тяжести, пока оно падает.", "use": "Энергию поднятого тела, высоту и массу, а вместе с кинетической энергией — скорость при падении."}, "work": {"about": "Работа совершается, когда сила перемещает тело. Эта формула верна, если сила направлена вдоль перемещения.", "use": "Работу силы, силу по известной работе, пройденный путь."}, "power": {"about": "Мощность показывает, как быстро совершается работа: та же работа за меньшее время означает большую мощность.", "use": "Мощность двигателя или человека, работу за известное время, время выполнения работы."}, "density": {"about": "Плотность показывает, какая масса приходится на единицу объёма. У каждого вещества своя плотность, поэтому по ней можно узнать вещество.", "use": "Массу тела по объёму, объём по массе, вещество по плотности."}, "pressure": {"about": "Давление — это сила, приходящаяся на единицу площади. Та же сила на меньшую площадь даёт большее давление: поэтому нож режет, а на широких лыжах не проваливаешься в снег.", "use": "Давление тела на опору, силу давления, нужную площадь опоры."}, "hydrop": {"about": "Жидкость давит тем сильнее, чем глубже и чем она плотнее. От формы сосуда давление не зависит.", "use": "Давление на глубине, глубину по давлению, плотность жидкости."}, "archimedes": {"about": "Жидкость выталкивает погружённое тело с силой, равной весу вытесненной жидкости. Сила зависит от плотности жидкости и объёма погружённой части, но не от материала тела.", "use": "Выталкивающую силу, объём тела, а если сравнить с силой тяжести — утонет тело или будет плавать."}, "heat": {"about": "Чтобы нагреть тело, ему нужно передать тепло. Тепла нужно тем больше, чем больше масса, чем сильнее нагрев (t₂ − t₁) и чем больше удельная теплоёмкость вещества.", "use": "Тепло для нагрева или выделившееся при остывании, конечную температуру, массу, вещество по теплоёмкости."}, "ohm": {"about": "Сила тока тем больше, чем больше напряжение, которое «толкает» заряды, и тем меньше, чем больше сопротивление проводника.", "use": "Силу тока, напряжение или сопротивление участка цепи."}, "charge": {"about": "Сила тока показывает, какой заряд проходит через проводник за секунду. Значит, за время t пройдёт заряд I·t.", "use": "Заряд, прошедший по цепи, силу тока, время."}, "pel": {"about": "Мощность тока — это работа, которую ток совершает за секунду. Она растёт и с напряжением, и с силой тока.", "use": "Мощность прибора, ток через него, напряжение питания."}, "joule": {"about": "Ток нагревает проводник. Тепло растёт с квадратом силы тока: при удвоении тока проводник выделяет в 4 раза больше тепла.", "use": "Тепло, выделившееся в проводнике, время нагрева, сопротивление нагревателя."}, "wave": {"about": "За один период волна проходит расстояние, равное длине волны. Поэтому скорость волны — это длина волны, умноженная на число колебаний в секунду.", "use": "Скорость, длину волны или частоту для звука, света, волн на воде."}, "period": {"about": "Период — время одного колебания, частота — число колебаний за секунду. Это обратные величины: чем чаще колебания, тем короче каждое.", "use": "Период по частоте и частоту по периоду."}};
+Object.assign(ABOUT,{"hthrow": {"about": "Тело, брошенное горизонтально, по горизонтали летит с постоянной скоростью v₀, пока не упадёт. Поэтому дальность — это скорость, умноженная на время полёта.", "use": "Дальность полёта, начальную скорость по известной дальности, время полёта."}, "hrange": {"about": "Время полёта зависит только от высоты: t = √(2h/g), как при свободном падении. За это время тело улетает по горизонтали на v₀·t. Чтобы улететь вдвое дальше, высоту нужно увеличить в 4 раза.", "use": "Дальность полёта с известной высоты, нужную скорость броска, высоту по дальности."}, "vfall": {"about": "По вертикали тело, брошенное горизонтально, падает так же, как отпущенное без броска: вертикальная скорость растёт на g каждую секунду.", "use": "Вертикальную скорость в любой момент полёта и время, за которое она достигнет нужного значения."}, "vcirc": {"about": "За один оборот тело проходит длину окружности 2πR за время одного оборота T. Чем больше радиус, тем быстрее движется точка при том же периоде: край колеса быстрее, чем середина.", "use": "Скорость точки на колесе, карусели, спутника на орбите; радиус и период обращения."}, "omega": {"about": "Угловая скорость показывает, на какой угол (в радианах) поворачивается тело за секунду. За полный оборот угол равен 2π.", "use": "Угловую скорость по периоду и период по угловой скорости."}, "vomega": {"about": "Все точки вращающегося тела поворачиваются на один и тот же угол, но дальние от центра проходят больший путь. Поэтому линейная скорость растёт с радиусом.", "use": "Линейную скорость точки по угловой, угловую скорость, радиус."}, "acirc": {"about": "При движении по окружности направление скорости всё время меняется, поэтому есть ускорение, направленное к центру. Оно растёт с квадратом скорости: на крутом повороте вдвое быстрее — в 4 раза сильнее «заносит».", "use": "Ускорение на повороте, допустимую скорость на повороте, радиус поворота."}, "acomega": {"about": "То же центростремительное ускорение, выраженное через угловую скорость. При одной и той же угловой скорости дальние от центра точки испытывают большее ускорение.", "use": "Ускорение точек вращающегося тела: центрифуги, карусели, колеса."}, "nucleons": {"about": "Ядро состоит из протонов и нейтронов, их вместе называют нуклонами. Массовое число A — это сколько всего нуклонов, Z — сколько протонов, N — сколько нейтронов.", "use": "Число нейтронов в ядре по таблице Менделеева, массовое число, число протонов."}, "nuccharge": {"about": "Каждый протон несёт элементарный заряд e, нейтроны заряда не имеют. Поэтому заряд ядра — это число протонов, умноженное на e.", "use": "Заряд ядра по номеру элемента и номер элемента по заряду ядра."}, "binding": {"about": "Масса ядра меньше суммы масс протонов и нейтронов, из которых оно состоит. Эта «пропавшая» масса Δm и есть энергия связи по формуле Эйнштейна E = mc². Из-за огромного c² даже крошечный дефект масс даёт большую энергию.", "use": "Энергию связи ядра по дефекту масс, дефект масс по энергии."}, "halflife": {"about": "Период полураспада — время, за которое распадается половина радиоактивных ядер. Число периодов показывает, сколько раз количество ядер уменьшилось вдвое: после 3 периодов останется ⅛.", "use": "Сколько периодов полураспада прошло, сам период, время распада."}});
+Object.assign(ABOUT,{"lenspower": {"about": "Оптическая сила показывает, насколько сильно линза преломляет лучи. Чем короче фокусное расстояние, тем сильнее линза. Измеряется в диоптриях: 1 дптр = 1/м. У рассеивающих линз она отрицательная.", "use": "Оптическую силу очков и луп по фокусному расстоянию и обратно."}, "thinlens": {"about": "В школьной записи формула выглядит так: 1/F = 1/d + 1/f. Она связывает, где стоит предмет и где получится его изображение. Если предмет дальше фокуса, изображение действительное, и его можно поймать на экране.", "use": "Где получится изображение, на каком расстоянии поставить предмет, фокусное расстояние линзы."}, "magnif": {"about": "Увеличение показывает, во сколько раз изображение больше предмета. Оно равно отношению расстояний: насколько изображение дальше от линзы, чем предмет, во столько раз оно и больше.", "use": "Размер изображения в фотоаппарате, проекторе, лупе."}, "refr": {"about": "Показатель преломления показывает, во сколько раз свет в веществе идёт медленнее, чем в вакууме. Из-за разной скорости свет на границе двух сред меняет направление — преломляется. У воды n ≈ 1,33, у стекла около 1,5.", "use": "Скорость света в веществе, показатель преломления вещества."}, "lightwave": {"about": "Свет — это электромагнитная волна, для неё верна та же связь, что и для любой волны: v = λν. В вакууме скорость равна c, поэтому λ = c/ν. Красный свет имеет большую длину волны, фиолетовый — меньшую.", "use": "Длину волны света по частоте и частоту по длине волны."}});
+F.forEach(f=>Object.assign(f,ABOUT[f.id]));
+const MODES=[
+  {id:'whatif',n:'А если?..',d:'Одну величину меняют. Как изменится другая?'},
+  {id:'build',n:'Собери формулу',d:'Вырази величину из блоков. Засчитывается любая верная запись.'},
+  {id:'verdict',n:'Найди ошибку',d:'Реши, верна ли формула, и узнай почему.'},
+  {id:'units',n:'Единицы',d:'Переводи км/ч в м/с, приставки, площади и объёмы, собирай единицы из основных. Темы на этот режим не влияют.'},
+  {id:'life',n:'Физика вокруг',d:'Вопросы из жизни без формул на экране. После ответа — какая формула это объясняет.'},
+  {id:'general',n:'Ответ в общем виде',d:'Задачи на 2–3 закона. Собери ответ буквами, как во второй части ЕГЭ.'},
+  {id:'boss',n:'Задача-босс',d:'Сложная задача на всю тему. Реши с первой попытки — получишь кубок.'}
+];
+const MODEN={whatif:'А если?..',build:'Собери формулу',verdict:'Найди ошибку',units:'Единицы',life:'Физика вокруг',general:'Ответ в общем виде',boss:'Задача-босс'};
+
+/* ===== Хранилище и интервальное повторение ===== */
+const KEY='fizhub-v1',OLD_KEY='whatif-v1'; // старый ключ — чтобы не потерять прогресс после переименования
+const fresh=()=>({prog:{},streak:{n:0,last:null},topics:TOPICS.map(t=>t.id),reports:[]});
+const valid=s=>s&&s.prog&&Array.isArray(s.topics)&&s.streak;
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY));if(valid(s)){s.reports=s.reports||[];return s;}}catch(e){}return fresh();}
+const useCloud=()=>tgAtLeast('6.9')&&tg.CloudStorage;
+function save(){
+  S.savedAt=Date.now();if(S.reports.length>20)S.reports=S.reports.slice(-20);
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  if(useCloud()){const cloud=JSON.stringify({prog:S.prog,streak:S.streak,topics:S.topics,savedAt:S.savedAt});
+    if(cloud.length<4000){try{tg.CloudStorage.setItem(KEY,cloud);}catch(e){}}
+    const extra=JSON.stringify({tasks:S.tasks||{},ach:S.ach||{},life:S.life||{},savedAt:S.savedAt});
+    if(extra.length<4000){try{tg.CloudStorage.setItem(KEY+'-x',extra);}catch(e){}}}
+}
+let S=load();
+// Облако Telegram: читаем новый ключ, а если его ещё нет — старый (до переименования в FizHub)
+const cloudGet=(k,cb)=>tg.CloudStorage.getItem(k,(e,v)=>{if(!e&&v)cb(e,v);else tg.CloudStorage.getItem(k.replace(KEY,OLD_KEY),cb);});
+if(useCloud()){try{cloudGet(KEY+'-x',(err,val)=>{if(err||!val)return;try{const c=JSON.parse(val);
+  if(c&&(c.savedAt||0)>=(S.savedAt||0)){S.tasks=c.tasks||S.tasks;S.ach=c.ach||S.ach;S.life=c.life||S.life;
+    try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}if(typeof view!=='undefined'&&view!=='q')render();}}catch(e){}});}catch(e){}}
+// Прогресс из облака Telegram: берём более свежую версию
+if(useCloud()){try{cloudGet(KEY,(err,val)=>{if(err||!val)return;try{const c=JSON.parse(val);
+  if(valid(c)&&(c.savedAt||0)>(S.savedAt||0)){S=Object.assign(S,{prog:c.prog,streak:c.streak,topics:c.topics,savedAt:c.savedAt});
+    try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}if(view!=='q')render();}}catch(e){}});}catch(e){}}
+const INTERVALS=[0,1,2,4,7,15];
+const prog=id=>S.prog[id]||{lv:0,next:0,r:0,w:0};
+function dayKey(d){d=d||new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function yesterdayKey(){const y=new Date();y.setDate(y.getDate()-1);return dayKey(y);}
+function touchStreak(){const t=dayKey();if(S.streak.last===t)return;S.streak.n=S.streak.last===yesterdayKey()?S.streak.n+1:1;S.streak.last=t;}
+function streakNow(){return (S.streak.last===dayKey()||S.streak.last===yesterdayKey())?S.streak.n:0;}
+function record(id,ok){
+  const p=Object.assign({},prog(id));
+  if(ok){p.r++;p.lv=Math.min(5,p.lv+1);p.next=Date.now()+INTERVALS[p.lv]*864e5;}
+  else{p.w++;p.lv=Math.max(0,p.lv-1);p.next=Date.now();}
+  S.prog[id]=p;touchStreak();save();
+}
+function pickFormula(recent,filt){
+  let pool=F.filter(f=>S.topics.includes(f.topic)&&(!filt||filt(f)));if(!pool.length)pool=F.filter(f=>!filt||filt(f));
+  const now=Date.now();
+  const scored=pool.map(f=>{const p=prog(f.id);const seen=!!S.prog[f.id];const due=seen&&p.next<=now;
+    return {f,sc:(due?0:seen?8:4)+p.lv+Math.random()*3+(recent.includes(f.id)?30:0)};});
+  scored.sort((a,b)=>a.sc-b.sc);return scored[0].f;
+}
+
+/* ===== Утилиты ===== */
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+function plural(n,one,few,many){const a=n%10,b=n%100;if(a===1&&b!==11)return one;if(a>=2&&a<=4&&(b<12||b>14))return few;return many;}
+const timesWord=n=>plural(n,'раз','раза','раз');
+function fmtX(x){const r=Math.round(x*100)/100;return Number.isInteger(r)?String(r):String(r).replace('.',',');}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const meas=id=>Q[id].u?`измеряется в ${Q[id].u}`:'— безразмерное число';
+const sym=id=>`<span class="fx">${Q[id].s}</span>`;
+
+/* ===== Алгебра формул ===== */
+function solve(f,t){
+  const coef=f.c||[1,1];
+  if(t===f.lhs)return {inner:Object.assign({},f.e),ic:coef.slice(),root:1};
+  const et=f.e[t],s=Math.sign(et),mm=Math.abs(et);
+  const inner={};inner[f.lhs]=s;
+  for(const v in f.e)if(v!==t)inner[v]=-s*f.e[v];
+  return {inner,ic:s>0?[coef[1],coef[0]]:[coef[0],coef[1]],root:mm};
+}
+function exps(sol){const o={};for(const v in sol.inner)o[v]=sol.inner[v]/sol.root;return o;}
+function trueVal(sol,env){let r=Math.pow(sol.ic[0]/sol.ic[1],1/sol.root);const e=exps(sol);for(const v in e)r*=Math.pow(env[v],e[v]);return r;}
+function qHTMLsym(id,e){let s=Q[id].s;if(Math.abs(e)===2)s+='<sup>2</sup>';return s;}
+function solHTML(sol){
+  const num=[],den=[];
+  if(sol.ic[0]!==1)num.push(`<span class="n">${sol.ic[0]}</span>`);
+  if(sol.ic[1]!==1)den.push(`<span class="n">${sol.ic[1]}</span>`);
+  for(const v in sol.inner){const e=sol.inner[v];if(e>0)num.push(qHTMLsym(v,e));else if(e<0)den.push(qHTMLsym(v,e));}
+  const join=a=>a.join('<span class="dot">·</span>');
+  let body=num.length?join(num):'<span class="n">1</span>';
+  if(den.length)body=`<span class="frac"><span>${body}</span><span>${join(den)}</span></span>`;
+  if(sol.root===2)body=`<span class="rt"><span class="rs">√</span><span class="rad">${body}</span></span>`;
+  return body;
+}
+const eqHTML=(t,sol)=>`<span class="fx">${Q[t].s}<span class="eq">=</span>${solHTML(sol)}</span>`;
+
+/* ===== Размерности ===== */
+const dz=()=>[0,0,0,0,0];
+const dadd=(a,b,k)=>a.map((x,i)=>x+(k===undefined?1:k)*b[i]);
+const dscale=(a,k)=>a.map(x=>x*k);
+const deq=(a,b)=>a.every((x,i)=>Math.abs(x-b[i])<1e-9);
+function solDim(sol){let d=dz();for(const v in sol.inner)d=dadd(d,Q[v].d,sol.inner[v]);return dscale(d,1/sol.root);}
+const NAMED=[['Н',D(1,1,-2)],['Дж',D(2,1,-2)],['Вт',D(2,1,-3)],['Па',D(-1,1,-2)],['В',D(2,1,-3,-1)],['Ом',D(2,1,-3,-2)],['Кл',D(0,0,1,1)],['Гц',D(0,0,-1)]];
+const BASE=['м','кг','с','А','К'],ORDER=[1,0,2,3,4];
+function expSup(e){if(e===1)return '';const t=Number.isInteger(e)?String(e):(e===.5?'1/2':e===1.5?'3/2':fmtX(e));return `<sup>${t}</sup>`;}
+function unitHTML(d){
+  if(d.every(x=>Math.abs(x)<1e-9))return 'безразмерное число';
+  for(const [n,u] of NAMED)if(deq(d,u))return n;
+  const num=[],den=[];
+  for(const i of ORDER){const e=d[i];if(e>1e-9)num.push(BASE[i]+expSup(e));else if(e<-1e-9)den.push(BASE[i]+expSup(-e));}
+  return (num.length?num.join('·'):'1')+(den.length?'/'+den.join('·'):'');
+}
+
+/* ===== Разбор формулы из блоков ===== */
+function PErr(code){this.code=code;}
+const PMSG={empty:'Собери формулу из блоков.',end:'Формула не дописана: после знака должна стоять величина или число.',paren:'Скобки не закрыты или стоят лишние.',unexpected:'Знаки стоят в неправильном порядке. Проверь, что между величинами нет двух знаков подряд.'};
+function parse(toks){
+  let i=0;const peek=()=>toks[i];
+  function expr(){let a=term();while(peek()&&peek().k==='op'&&(peek().v==='+'||peek().v==='-')){const op=toks[i++].v;a={t:'bin',op,a,b:term()};}return a;}
+  function term(){let a=unary();for(;;){const p=peek();if(!p)break;
+    if(p.k==='op'&&(p.v==='*'||p.v==='/')){i++;a={t:'bin',op:p.v,a,b:unary()};}
+    else if(p.k==='v'||p.k==='n'||p.k==='('||p.k==='rt'){a={t:'bin',op:'*',a,b:unary()};}
+    else break;}return a;}
+  function unary(){const p=peek();if(p&&p.k==='op'&&p.v==='-'){i++;return {t:'neg',a:unary()};}return power();}
+  function power(){let a=primary();while(peek()&&peek().k==='sq'){i++;a={t:'sq',a};}return a;}
+  function primary(){const p=toks[i++];if(!p)throw new PErr('end');
+    if(p.k==='n')return {t:'num',v:p.v};
+    if(p.k==='v')return {t:'var',id:p.id};
+    if(p.k==='('){const e=expr();if(!peek()||peek().k!==')')throw new PErr('paren');i++;return e;}
+    if(p.k==='rt')return {t:'sqrt',a:power()};
+    throw new PErr(p.k===')'?'paren':'unexpected');}
+  if(!toks.length)throw new PErr('empty');
+  const e=expr();if(i<toks.length)throw new PErr(toks[i].k===')'?'paren':'unexpected');return e;
+}
+function evN(n,env){switch(n.t){
+  case 'num':return n.v;case 'var':return env[n.id];case 'neg':return -evN(n.a,env);
+  case 'sq':{const x=evN(n.a,env);return x*x;}case 'sqrt':return Math.sqrt(evN(n.a,env));
+  case 'bin':{const a=evN(n.a,env),b=evN(n.b,env);return n.op==='+'?a+b:n.op==='-'?a-b:n.op==='*'?a*b:a/b;}}}
+function evD(n){switch(n.t){
+  case 'num':return dz();case 'var':return Q[n.id].d.slice();case 'neg':return evD(n.a);
+  case 'sq':return dscale(evD(n.a),2);case 'sqrt':return dscale(evD(n.a),.5);
+  case 'bin':{const a=evD(n.a),b=evD(n.b);
+    if(n.op==='+'||n.op==='-'){if(!deq(a,b))throw {add:true,da:a,db:b};return a;}
+    return n.op==='*'?dadd(a,b):dadd(a,b,-1);}}}
+function collect(n,set){set=set||new Set();if(n.t==='var')set.add(n.id);if(n.a)collect(n.a,set);if(n.b)collect(n.b,set);return set;}
+
+function tokenize(str){return str.trim().split(/\s+/).map(w=>{
+  if(/^\d+(\.\d+)?$/.test(w))return {k:'n',v:+w};
+  if(w.length===1&&'+-*/'.includes(w))return {k:'op',v:w};
+  if(w==='('||w===')')return {k:w};
+  if(w==='²')return {k:'sq'};
+  if(w==='√')return {k:'rt'};
+  if(!Q[w])throw new Error('Неизвестная величина '+w);
+  return {k:'v',id:w};});}
+const mono=f=>!f.rhs;
+const nm=(f,id)=>(f&&f.qn&&f.qn[id])||Q[id].n;
+F.forEach(f=>{if(mono(f))return;f.rhsAst=parse(tokenize(f.rhs));f.formAst={};f.formAst[f.lhs]=f.rhsAst;for(const t in f.forms)f.formAst[t]=parse(tokenize(f.forms[t]));});
+function fVars(f){return mono(f)?[f.lhs].concat(Object.keys(f.e)):[f.lhs].concat([...collect(f.rhsAst)]);}
+function astHTML(n){
+  const wrap=c=>`<span class="n">(</span>${astHTML(c)}<span class="n">)</span>`;
+  const isAdd=c=>c.t==='bin'&&(c.op==='+'||c.op==='-');
+  switch(n.t){
+    case 'num':return `<span class="n">${n.v}</span>`;
+    case 'var':return Q[n.id].s;
+    case 'neg':return `<span class="op">−</span>${isAdd(n.a)?wrap(n.a):astHTML(n.a)}`;
+    case 'sq':return (n.a.t==='var'||n.a.t==='num'?astHTML(n.a):wrap(n.a))+'<sup>2</sup>';
+    case 'sqrt':return `<span class="rt"><span class="rs">√</span><span class="rad">${astHTML(n.a)}</span></span>`;
+    case 'bin':
+      if(n.op==='/')return `<span class="frac"><span>${astHTML(n.a)}</span><span>${astHTML(n.b)}</span></span>`;
+      if(n.op==='*')return (isAdd(n.a)?wrap(n.a):astHTML(n.a))+'<span class="dot">·</span>'+(isAdd(n.b)?wrap(n.b):astHTML(n.b));
+      return astHTML(n.a)+`<span class="op">${n.op==='+'?'+':'−'}</span>`+(n.op==='-'&&isAdd(n.b)?wrap(n.b):astHTML(n.b));
+  }
+}
+const formHTML=(f,t)=>mono(f)?solHTML(solve(f,t)):astHTML(f.formAst[t]);
+const eqF=(f,t)=>`<span class="fx">${Q[t].s}<span class="eq">=</span>${formHTML(f,t)}</span>`;
+const eqAst=(t,ast)=>`<span class="fx">${Q[t].s}<span class="eq">=</span>${astHTML(ast)}</span>`;
+function rhsVal(f,env){if(mono(f)){const c=f.c||[1,1];let r=c[0]/c[1];for(const v in f.e)r*=Math.pow(env[v],f.e[v]);return r;}return evN(f.rhsAst,env);}
+// Случайные, но согласованные значения: конечная скорость больше начальной и т. п.
+function makeEnv(f,extra,lo,hi){lo=lo||0.7;hi=hi||4;const env={};
+  fVars(f).concat(extra||[]).forEach(v=>{env[v]=lo+Math.random()*(hi-lo);});
+  (f.gt||[]).forEach(([a,b])=>{if(env[a]<=env[b])env[a]=env[b]+0.5+Math.random()*2;});
+  env[f.lhs]=rhsVal(f,env);return env;}
+const trueEval=(q,env)=>mono(q.f)?trueVal(q.sol,env):evN(q.f.formAst[q.t],env);
+
+const REL={'1':'прямо пропорциональна','-1':'обратно пропорциональна','2':'пропорциональна квадрату','-2':'обратно пропорциональна квадрату','0.5':'пропорциональна корню из','-0.5':'обратно пропорциональна корню из'};
+const relText=e=>REL[String(Math.round(e*2)/2)]||'зависит по-другому от';
+function depHint(q,d){
+  const t=q.t,f=q.f,v=d.v;
+  if(Math.abs(d.te)<1e-9)return `Величина ${sym(v)} (${nm(f,v)}) здесь лишняя: ${nm(f,t)} от неё не зависит.`;
+  if(Math.abs(d.ue)<1e-9)return `Величина ${sym(t)} зависит от ${sym(v)} (${nm(f,v)}), а в твоей формуле её нет.`;
+  if(Math.sign(d.ue)!==Math.sign(d.te))return d.te>0
+    ?`Если увеличить ${sym(v)}, величина ${sym(t)} должна расти, а по твоей формуле она уменьшается.`
+    :`Если увеличить ${sym(v)}, величина ${sym(t)} должна уменьшаться, а по твоей формуле она растёт.`;
+  if(mono(f))return `Зависимость от ${sym(v)} не та: величина ${sym(t)} ${relText(d.te)} ${sym(v)}, а у тебя получилось, что она ${relText(d.ue)} ${sym(v)}.`;
+  return 'Все нужные величины на месте, но связаны не так. Проверь каждое слагаемое: не пропущен ли множитель вроде ½, квадрат или скобки.';
+}
+const LIGHT={
+  add:'Где-то складываются или вычитаются величины разной природы. Посмотри на знаки «+» и «−».',
+  sign:'Знак получается не тот. Посмотри на порядок вычитания.',
+  missing:'Не хватает одной из величин.',
+  extra:'В формуле есть лишняя величина.',
+  dim:'Единицы слева и справа не совпадают. Подумай, в чём измеряется искомая величина.',
+  dir:'Одна из величин стоит не на своём месте. Может, перепутаны числитель и знаменатель?',
+  coef:'Почти верно. Проверь числовой множитель.',
+  other:'Связь между величинами не та. Подумай, от чего и как зависит искомая величина.',
+  nan:'При некоторых значениях формула не имеет смысла. Проверь знаки и деление.'
+};
+function checkBuild(q){
+  let ast;try{ast=parse(q.toks);}catch(e){if(e instanceof PErr)return {soft:true,msg:PMSG[e.code]};throw e;}
+  if(collect(ast).has(q.t))return {soft:true,msg:`Справа не должно быть самой величины ${sym(q.t)}: её мы и выражаем.`};
+  let dim=null,addErr=null;try{dim=evD(ast);}catch(e){if(e&&e.add)addErr=e;else throw e;}
+  let ok=!addErr;
+  for(let k=0;k<6&&ok;k++){const env=makeEnv(q.f,q.palette);const a=evN(ast,env),b=trueEval(q,env);
+    if(!isFinite(a)||Math.abs(a-b)>1e-7*Math.max(1,Math.abs(b)))ok=false;}
+  if(ok)return {ok:true};
+  const hints=[];let type=null;
+  const dimBad=!addErr&&!deq(dim,Q[q.t].d);
+  if(addErr){type='add';hints.push(`<p>Здесь складываются или вычитаются величины разной природы: ${unitHTML(addErr.da)} и ${unitHTML(addErr.db)}. Это как сложить метры с секундами.</p>`);}
+  else if(dimBad)hints.push(`<p>Единицы не сходятся: ${sym(q.t)} ${meas(q.t)}, а справа получается ${unitHTML(dim)}.</p>`);
+  if(!addErr){
+    const env=makeEnv(q.f,q.palette,1.3,2.3);const ub=evN(ast,env),tb=trueEval(q,env);
+    if(!isFinite(ub)){type='nan';hints.push('<p>При некоторых значениях получается деление на ноль или корень из отрицательного числа. Проверь знаки.</p>');}
+    else if(Math.sign(ub)!==Math.sign(tb)){type='sign';hints.push('<p>Получается значение с обратным знаком. Проверь порядок вычитания: обычно из конечного значения вычитают начальное.</p>');}
+    else if((()=>{const r0=ub/tb;for(let i=0;i<4;i++){const e=makeEnv(q.f,q.palette,1.3,2.3);if(Math.abs(evN(ast,e)/trueEval(q,e)-r0)>1e-6*Math.abs(r0))return false;}return true;})()){
+      type='coef';hints.push('<p>Все величины на месте и связаны верно, но не тот числовой множитель. Проверь, нужен ли коэффициент вроде 2.</p>');}
+    else{
+      const diffs=[];
+      for(const v of [...new Set(fVars(q.f).concat(q.palette))].filter(v=>v!==q.t)){
+        const e2=Object.assign({},env);e2[v]=env[v]*2;
+        const ue=Math.log2(Math.abs(evN(ast,e2)/ub)),te=Math.log2(Math.abs(trueEval(q,e2)/tb));
+        if(isFinite(ue)&&isFinite(te)&&Math.abs(ue-te)>0.02)diffs.push({v,ue,te});
+      }
+      const rank=d=>Math.abs(d.te)<1e-9||Math.abs(d.ue)<1e-9?0:Math.sign(d.ue)!==Math.sign(d.te)?1:2;
+      diffs.sort((a,b)=>rank(a)-rank(b));
+      if(diffs.length){const d=diffs[0];
+        type=Math.abs(d.ue)<1e-9?'missing':Math.abs(d.te)<1e-9?'extra':dimBad?'dim':Math.sign(d.ue)!==Math.sign(d.te)?'dir':'other';
+        hints.push(`<p>${depHint(q,d)}</p>`);}
+      else{type=dimBad?'dim':'coef';if(!hints.length)hints.push('<p>Все зависимости верные, но не тот числовой множитель. Проверь, нужен ли коэффициент вроде 2.</p>');}
+    }
+  }
+  return {ok:false,light:`<p>${LIGHT[type||(dimBad?'dim':'other')]}</p>`,msg:hints.join('')};
+}
+
+/* ===== Генераторы вопросов ===== */
+function varsOf(f){return mono(f)?[f.lhs].concat(Object.keys(f.e)).filter(v=>!CONST.has(v)):[f.lhs].concat(Object.keys(f.forms));}
+function change(R){if(Math.abs(R-1)<1e-9)return 'не изменится';const X=R>1?R:1/R;return `${R>1?'увеличится':'уменьшится'} в ${fmtX(X)} ${timesWord(Math.round(X))}`;}
+const isNice=R=>{const X=R>1?R:1/R;return Math.abs(X-Math.round(X))<1e-9&&X<=100;};
+function genWhatIf(f){
+  const pool=varsOf(f);const t=pick(pool);const c=pick(pool.filter(v=>v!==t));
+  const sol=solve(f,t);const r=exps(sol)[c];const up=Math.random()<.6;
+  const k=pick(Math.abs(r)===.5?[4,9]:Math.abs(r)===2?[2,3]:[2,3,4]);
+  const R=Math.pow(k,up?r:-r);const correct=change(R);
+  const labels=[];const inv=change(1/R);if(inv!==correct)labels.push(inv);
+  if(correct!=='не изменится')labels.push('не изменится');
+  for(const x of shuffle([k,1/k,R*R,1/(R*R),k*k,1/(k*k)]).filter(isNice)){const l=change(x);if(l!==correct&&!labels.includes(l))labels.push(l);}
+  return {f,t,c,sol,correct,opts:shuffle([correct].concat(labels.slice(0,3))),
+    text:`<span class="fname">${f.name}.</span> Величину ${sym(c)} (${nm(f,c)}) ${up?'увеличили':'уменьшили'} в ${k} ${timesWord(k)}, остальные величины в формуле не меняются. Как изменится ${nm(f,t)} ${sym(t)}?`,
+    expl:`<p>${eqF(f,t)}</p><p>Величина ${sym(t)} ${relText(r)} ${sym(c)}, поэтому она ${correct}.</p>`};
+}
+function genBuild(f){
+  const t=pick(varsOf(f));const sol=mono(f)?solve(f,t):null;
+  const own=fVars(f).filter(v=>v!==t);
+  const used=new Set(own.map(v=>Q[v].s).concat([Q[t].s]));
+  const extraPool=shuffle(F.filter(g=>g.topic===f.topic&&g.id!==f.id).concat(shuffle(F).slice(0,4)).flatMap(fVars));
+  const extra=[];for(const v of extraPool){if(extra.length>=2)break;if(own.includes(v)||v===t||used.has(Q[v].s))continue;used.add(Q[v].s);extra.push(v);}
+  return {f,t,sol,palette:shuffle(own.concat(extra)),toks:[],fb:null,counted:false};
+}
+function mutateAst(ast){
+  const c=JSON.parse(JSON.stringify(ast)),cands=[];
+  const replaceWith=(n,src)=>{const s=JSON.parse(JSON.stringify(src));for(const k in n)delete n[k];Object.assign(n,s);};
+  (function walk(n){
+    if(n.t==='bin'){
+      if(n.op==='-'){cands.push(['swap',()=>{const x=n.a;n.a=n.b;n.b=x;}]);cands.push(['sign',()=>{n.op='+';}]);}
+      if(n.op==='+'){cands.push(['sign',()=>{n.op='-';}]);cands.push(['drop',()=>replaceWith(n,n.a)]);cands.push(['drop',()=>replaceWith(n,n.b)]);}
+      if(n.op==='/')cands.push(['muldiv',()=>{n.op='*';}]);
+      if(n.op==='*')cands.push(['muldiv',()=>{n.op='/';}]);
+    }
+    if(n.t==='sq')cands.push(['pow',()=>replaceWith(n,n.a)]);
+    if(n.a)walk(n.a);if(n.b)walk(n.b);
+  })(c);
+  if(!cands.length)return null;const [kind,fn]=pick(cands);fn();return {ast:c,kind};
+}
+const MUTMSG={swap:'Перепутан порядок вычитания, поэтому величина получится с обратным знаком.',sign:'Перепутан знак между слагаемыми. Единицы такую ошибку не ловят, поэтому проверяй смысл: величина должна расти или уменьшаться?',drop:'Пропущено слагаемое.',muldiv:'Перепутаны умножение и деление.',pow:'Пропущен квадрат.'};
+function verdictCorrect(f,t){return `<p>Исходная формула: ${eqF(f,f.lhs)}${t!==f.lhs?`. Из неё выражена величина ${sym(t)}.`:'.'}</p><p>${Q[t].u?`Единицы сходятся: обе части измеряются в ${Q[t].u}.`:'Единицы сходятся: обе части — безразмерные числа.'}</p>`;}
+function genVerdict(f){
+  const t=pick(varsOf(f));let wrong=Math.random()<.55;
+  if(!mono(f)){
+    const ast=f.formAst[t];let shown=ast,kind=null;
+    if(wrong){for(let i=0;i<15&&!kind;i++){const r=mutateAst(ast);if(!r)break;const env=makeEnv(f,[]);const a=evN(r.ast,env),b=evN(ast,env);
+      if(isFinite(a)&&Math.abs(a-b)>1e-6*Math.max(1,Math.abs(b))){shown=r.ast;kind=r.kind;}}
+      if(!kind)wrong=false;}
+    let expl;
+    if(!wrong)expl=verdictCorrect(f,t);
+    else{expl=`<p>Правильно: ${eqF(f,t)}</p>`;let md=null,add=false;try{md=evD(shown);}catch(e){add=true;}
+      if(add)expl+='<p>Ошибку видно по единицам: здесь складываются величины разной природы.</p>';
+      else if(!deq(md,Q[t].d))expl+=`<p>Ошибку видно по единицам: справа получается ${unitHTML(md)}, а ${sym(t)} ${meas(t)}.</p>`;
+      else expl+=`<p>${MUTMSG[kind]}</p>`;}
+    return {f,t,wrong,shownHTML:eqAst(t,shown),expl};
+  }
+  const sol=solve(f,t);let shown=sol,mut=null;
+  if(wrong){
+    const vs=Object.keys(sol.inner);const muts=[];
+    vs.forEach(v=>{muts.push({k:'flip',v});muts.push({k:'pow',v});if(vs.length>1)muts.push({k:'drop',v});});
+    if(sol.ic[0]!==1||sol.ic[1]!==1)muts.push({k:'coef'});
+    if(sol.root===2)muts.push({k:'root'});
+    mut=pick(muts);const inner=Object.assign({},sol.inner);let ic=sol.ic.slice(),root=sol.root;
+    if(mut.k==='flip')inner[mut.v]=-inner[mut.v];
+    if(mut.k==='pow')inner[mut.v]=Math.sign(inner[mut.v])*(Math.abs(inner[mut.v])===2?1:2);
+    if(mut.k==='drop')delete inner[mut.v];
+    if(mut.k==='coef')ic=[1,1];
+    if(mut.k==='root')root=1;
+    shown={inner,ic,root};
+  }
+  let expl;
+  if(!wrong)expl=verdictCorrect(f,t);
+  else{
+    expl=`<p>Правильно: ${eqF(f,t)}</p>`;
+    const md=solDim(shown);
+    if(!deq(md,Q[t].d))expl+=`<p>Ошибку видно по единицам: справа получается ${unitHTML(md)}, а ${sym(t)} ${meas(t)}.</p>`;
+    if(mut.k==='flip'||mut.k==='pow'||mut.k==='drop')expl+=`<p>Величина ${sym(t)} ${relText(exps(sol)[mut.v])} ${sym(mut.v)}${mut.k==='drop'?', а здесь её нет':''}.</p>`;
+    if(mut.k==='coef')expl+='<p>Пропущен числовой множитель. Единицы его не ловят, поэтому его стоит запомнить.</p>';
+    if(mut.k==='root')expl+='<p>Пропущен квадратный корень.</p>';
+  }
+  return {f,t,wrong,shownHTML:`<span class="fx">${Q[t].s}<span class="eq">=</span>${solHTML(shown)}</span>`,expl};
+}
+
+/* ===== Новые величины для задач ===== */
+Object.assign(Q,{
+  Mpl:{s:'M',n:'масса планеты',u:'кг',d:D(0,1)},
+  rhot:{s:'ρ<sub>т</sub>',n:'плотность тела',u:'кг/м³',d:D(-3,1)},
+  Vp:{s:'V<sub>п</sub>',n:'объём погружённой части',u:'м³',d:D(3)},
+  ne:{s:'N<sub>e</sub>',n:'число электронов',u:'',d:D()},
+  eps:{s:'ε',n:'удельная энергия связи',u:'Дж',d:D(2,1,-2)},
+  mp:{s:'m<sub>p</sub>',n:'масса протона',u:'кг',d:D(0,1)},
+  mn:{s:'m<sub>n</sub>',n:'масса нейтрона',u:'кг',d:D(0,1)},
+  Mya:{s:'M<sub>я</sub>',n:'масса ядра',u:'кг',d:D(0,1)}
+});
+
+/* ===== Режим «Единицы» ===== */
+const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+function fmtNum(x){
+  if(x===0)return '0';
+  const a=Math.abs(x);
+  if(a>=1e-3&&a<1e6){const s=String(parseFloat(x.toPrecision(4)));return s.replace('-','−').replace('.',',');}
+  const e=Math.floor(Math.log10(a)+1e-9);let m=parseFloat((x/Math.pow(10,e)).toPrecision(4));
+  const pw='10<sup>'+String(e).replace('-','−')+'</sup>';
+  return m===1?pw:String(m).replace('.',',')+'·'+pw;
+}
+const P10=e=>'10<sup>'+String(e).replace('-','−')+'</sup>';
+const CONV=[
+  // [из, в, множитель, неверные множители, объяснение, значения]
+  ['мА','А',1e-3,[1e3,1e-6,1e-2],'Приставка «милли» (м) означает '+P10(-3)+': 1 мА = 0,001 А.'],
+  ['кПа','Па',1e3,[1e-3,1e6,1e2],'Приставка «кило» (к) означает '+P10(3)+': 1 кПа = 1000 Па.'],
+  ['МВт','Вт',1e6,[1e3,1e-6,1e9],'Приставка «мега» (М) означает '+P10(6)+': 1 МВт = 1 000 000 Вт.'],
+  ['мкКл','Кл',1e-6,[1e-3,1e6,1e-9],'Приставка «микро» (мк) означает '+P10(-6)+'.'],
+  ['кДж','Дж',1e3,[1e-3,1e6,1e2],'Приставка «кило» (к) означает '+P10(3)+': 1 кДж = 1000 Дж.'],
+  ['мм','м',1e-3,[1e-2,1e3,1e-6],'Приставка «милли» (м) означает '+P10(-3)+': 1 мм = 0,001 м.'],
+  ['см','м',1e-2,[1e-3,1e2,1e-1],'Приставка «санти» (с) означает '+P10(-2)+': 1 см = 0,01 м.'],
+  ['кОм','Ом',1e3,[1e-3,1e6,1e2],'Приставка «кило» (к) означает '+P10(3)+'.'],
+  ['мс','с',1e-3,[1e3,1e-2,1e-6],'Приставка «милли» (м) означает '+P10(-3)+': 1 мс = 0,001 с.'],
+  ['нм','м',1e-9,[1e-6,1e-3,1e9],'Приставка «нано» (н) означает '+P10(-9)+'. В нанометрах обычно измеряют длину световой волны.'],
+  ['г','кг',1e-3,[1e3,1e-2,1e-6],'Основная единица массы в СИ — килограмм: 1 г = 0,001 кг.'],
+  ['т','кг',1e3,[1e2,1e-3,1e6],'1 тонна = 1000 кг.'],
+  ['см²','м²',1e-4,[1e-2,1e-6,1e4],'1 см = '+P10(-2)+' м, значит 1 см² = ('+P10(-2)+' м)² = '+P10(-4)+' м². Частая ошибка — переводить площадь как длину.'],
+  ['мм²','м²',1e-6,[1e-3,1e-9,1e-4],'1 мм = '+P10(-3)+' м, значит 1 мм² = ('+P10(-3)+' м)² = '+P10(-6)+' м².'],
+  ['см³','м³',1e-6,[1e-2,1e-3,1e-4],'1 см = '+P10(-2)+' м, значит 1 см³ = ('+P10(-2)+' м)³ = '+P10(-6)+' м³.'],
+  ['л','м³',1e-3,[1e-6,1,1e3],'1 л = 1 дм³, а 1 дм = 0,1 м, значит 1 л = (0,1 м)³ = '+P10(-3)+' м³.'],
+  ['мин','с',60,[100,1/60,3600],'1 мин = 60 с.'],
+  ['ч','с',3600,[60,100,1/3600],'1 ч = 60 мин = 60 · 60 с = 3600 с.'],
+  ['км/ч','м/с',1/3.6,[3.6,1000,1/60],'1 км/ч = 1000 м / 3600 с = 1/3,6 м/с. Чтобы перевести км/ч в м/с, раздели на 3,6.',[18,36,54,72,90,108,144]],
+  ['м/с','км/ч',3.6,[1/3.6,1e-3,60],'1 м/с = 0,001 км / (1/3600 ч) = 3,6 км/ч. Чтобы перевести м/с в км/ч, умножь на 3,6.',[5,10,15,20,25,30]],
+  ['г/см³','кг/м³',1e3,[1e-3,1e6,1],'1 г/см³ = '+P10(-3)+' кг / '+P10(-6)+' м³ = 1000 кг/м³. Например, плотность воды 1 г/см³ = 1000 кг/м³.',[0.8,1,2.7,7.8,11.3,13.6]],
+  ['кВт·ч','Дж',3.6e6,[1e3,3.6e3,6e4],'1 кВт·ч = 1000 Вт · 3600 с = 3,6·'+P10(6)+' Дж. В киловатт-часах считает электросчётчик.',[1,2,5,10]]
+];
+const CONV_VALS=[0.5,1.5,2,4,5,12,25,250,500];
+function genConvert(){
+  const [from,to,k,wrong,expl,vals]=pick(CONV);const x=pick(vals||CONV_VALS);
+  const correct=fmtNum(x*k)+' '+to;const opts=[correct];
+  for(const w of shuffle(wrong)){const o=fmtNum(x*w)+' '+to;if(!opts.includes(o))opts.push(o);}
+  return {text:`Переведи в единицы СИ: <b class="big-n">${fmtNum(x)} ${from}</b> = ? ${to}`,opts:shuffle(opts.slice(0,4)),correct,
+    expl:`<p>${expl}</p><p>${fmtNum(x)} ${from} = ${correct}</p>`};
+}
+function baseHTML(d){
+  const num=[],den=[];
+  for(const i of ORDER){const e=d[i];if(e>1e-9)num.push(BASE[i]+expSup(e));else if(e<-1e-9)den.push(BASE[i]+expSup(-e));}
+  const n=num.length?num.join('·'):'1';
+  return den.length?n+'/'+(den.length>1?'('+den.join('·')+')':den[0]):n;
+}
+const DERIVED=[
+  ['Н','сила',D(1,1,-2),'F = m·a, значит 1 Н = 1 кг · 1 м/с².'],
+  ['Дж','работа и энергия',D(2,1,-2),'A = F·s, значит 1 Дж = 1 Н·м = 1 кг·м²/с².'],
+  ['Вт','мощность',D(2,1,-3),'N = A/t, значит 1 Вт = 1 Дж/с = 1 кг·м²/с³.'],
+  ['Па','давление',D(-1,1,-2),'p = F/S, значит 1 Па = 1 Н/м² = 1 кг/(м·с²).'],
+  ['Кл','заряд',D(0,0,1,1),'q = I·t, значит 1 Кл = 1 А·с.'],
+  ['Гц','частота',D(0,0,-1),'ν = 1/T, значит 1 Гц = 1/с.'],
+  ['В','напряжение',D(2,1,-3,-1),'P = U·I, значит 1 В = 1 Вт/А = 1 кг·м²/(А·с³).'],
+  ['дптр','оптическая сила',D(-1),'D = 1/F, значит 1 дптр = 1/м.'],
+  ['Ом','сопротивление',D(2,1,-3,-2),'R = U/I, значит 1 Ом = 1 В/А = 1 кг·м²/(А²·с³).']
+];
+function genBase(){
+  const [u,what,d,expl]=pick(DERIVED);const correct=baseHTML(d);const opts=[correct];
+  const muts=shuffle([[0,1],[0,-1],[2,1],[2,-1],[1,-1],[1,1]]);
+  for(const [i,dd] of muts){if(opts.length>=4)break;const m=d.slice();m[i]+=dd;if(m.every(x=>x===0))continue;const o=baseHTML(m);if(!opts.includes(o))opts.push(o);}
+  return {text:`Из каких основных единиц СИ состоит <b>1 ${u}</b> (${what})?`,opts:shuffle(opts),correct,noCap:true,expl:`<p>${expl}</p>`};
+}
+function genMeasure(){
+  const pool=[...new Set(F.flatMap(fVars))].filter(id=>Q[id].u&&!Q[id].u.startsWith('≈'));
+  const id=pick(pool);const correct=Q[id].u;const opts=[correct];
+  for(const o of shuffle(pool.map(x=>Q[x].u))){if(opts.length>=4)break;if(!opts.includes(o))opts.push(o);}
+  return {text:`В чём измеряется ${Q[id].n} ${sym(id)}?`,opts:shuffle(opts),correct,noCap:true,expl:`<p>${cap(Q[id].n)} ${sym(id)} измеряется в ${correct}.</p>`};
+}
+function genUnits(){
+  const r=Math.random();const q=r<.55?genConvert():r<.8?genBase():genMeasure();
+  q.noCap=true;q.f=null;q.fid='units';return q;
+}
+
+/* ===== Режим «Физика вокруг» ===== */
+// Первый вариант ответа — верный (варианты перемешиваются при показе).
+const LIFE=[
+  {id:'turn',f:'acirc',q:'Почему на повороте машину заносит сильнее, если она едет быстрее?',a:['Ускорение к центру растёт как квадрат скорости, и трения шин не хватает','На большой скорости машина становится легче и хуже прижимается к дороге','Центробежная сила зависит от массы, а масса быстрой машины становится больше','Быстро крутящиеся колёса меньше касаются дороги и хуже держат её'],e:'Чтобы ехать по дуге, машине нужно ускорение к центру a<sub>ц</sub> = v²/R. Вдвое быстрее — и нужно в 4 раза больше силы трения. Если шины её не дают, машину выносит наружу.'},
+  {id:'knife',f:'pressure',q:'Почему острый нож режет, а тупой мнёт, хотя давишь одинаково?',a:['Площадь острой кромки меньше, поэтому давление на материал больше','Острый нож всегда делают из более твёрдой и прочной стали, чем тупой','У острого ножа больше масса, поэтому он сильнее давит на материал','Тупое лезвие скользит по поверхности и не может в неё войти'],e:'Давление p = F/S. Сила та же, а площадь острой кромки в сотни раз меньше, значит и давление в сотни раз больше. Его хватает, чтобы разрушить материал.'},
+  {id:'ski',f:'pressure',q:'Зачем лыжи делают широкими и длинными?',a:['Вес распределяется на большую площадь, и давление на снег меньше','Длинные лыжи легче, поэтому человек меньше давит на снег','Широкие лыжи уменьшают силу тяжести, действующую на лыжника','Большая площадь сильнее нагревает снег, и он становится плотнее и твёрже'],e:'Сила (вес лыжника) та же, а площадь опоры большая. По формуле p = F/S давление на снег становится маленьким, и лыжник не проваливается.'},
+  {id:'dam',f:'hydrop',q:'Почему плотину внизу делают толще, чем вверху?',a:['Давление воды растёт с глубиной и у дна плотины самое большое','У дна вода холоднее и тяжелее, поэтому давит сильнее','Широкое основание нужно, чтобы плотина не утонула в иле','Верхние слои воды движутся быстрее и поэтому меньше давят на стену'],e:'Давление жидкости p = ρgh растёт вместе с глубиной h. У дна давление максимальное, поэтому стену там делают самой прочной.'},
+  {id:'ship',f:'archimedes',q:'Почему стальной корабль плавает, а стальной гвоздь тонет?',a:['Полый корпус вытесняет много воды, и сила Архимеда удерживает корабль','Морская вода плотнее стали, поэтому сталь в море не тонет','Корабль строят из особой стали, которая легче воды','Работающие двигатели всё время удерживают огромный корабль на плаву'],e:'Сила Архимеда F = ρgV зависит от объёма вытесненной воды. Полый корпус занимает огромный объём и вытесняет столько воды, сколько весит корабль. Гвоздь сплошной и вытесняет мало.'},
+  {id:'sea',f:'archimedes',q:'Почему в море плавать легче, чем в реке?',a:['Солёная вода плотнее пресной, поэтому выталкивает сильнее','Морские волны всё время подталкивают пловца вверх','В тёплой морской воде тело человека становится заметно легче','В море больше глубина, а глубокая вода держит лучше'],e:'Сила Архимеда F = ρgV пропорциональна плотности жидкости. Солёная вода плотнее пресной, поэтому выталкивает сильнее.'},
+  {id:'ice',f:'density',q:'Почему лёд плавает в воде?',a:['Плотность льда меньше плотности воды','Лёд легче воды, потому что он холодный','Без пузырьков воздуха внутри лёд утонул бы','Вода выталкивает наверх любые твёрдые тела'],e:'Плотность ρ = m/V. При замерзании вода расширяется: масса та же, а объём больше, поэтому плотность льда (около 900 кг/м³) меньше плотности воды (1000 кг/м³).'},
+  {id:'crash',f:'ek',q:'Почему разрушения при аварии на 100 км/ч примерно в 4 раза больше, чем на 50 км/ч, а не в 2?',a:['Кинетическая энергия растёт как квадрат скорости','На высокой скорости масса машины заметно возрастает','При удвоении скорости вдвое растёт и время удара','Тормоза на высокой скорости гасят вдвое меньше энергии'],e:'Кинетическая энергия E<sub>к</sub> = mv²/2. При удвоении скорости она растёт в 2² = 4 раза, и вся эта энергия уходит на разрушение при ударе.'},
+  {id:'truck',f:'newton2',q:'Почему гружёный грузовик разгоняется медленнее пустого при той же силе тяги?',a:['При той же силе ускорение тела обратно пропорционально его массе','Груз давит на колёса и сильно увеличивает трение в моторе','Тяжёлый груз уменьшает силу тяги, которую даёт двигатель','Колёса гружёного грузовика проскальзывают по дороге'],e:'По второму закону Ньютона a = F/m. Сила та же, масса больше — ускорение меньше.'},
+  {id:'scales',f:'hooke',q:'Как работают пружинные весы (безмен)?',a:['Удлинение пружины пропорционально силе, по нему и узнают вес','Пружина нагревается от груза, а шкала показывает температуру','Груз раскачивает пружину, а весы подсчитывают число её колебаний','Пружина сжимает воздух внутри, а шкала показывает давление'],e:'По закону Гука F = k·x удлинение пропорционально силе. Шкалу размечают так, что каждое деление соответствует определённой силе.'},
+  {id:'moon',f:'grav',q:'Почему Луна не падает на Землю, хотя Земля её притягивает?',a:['Притяжение искривляет путь Луны, и она движется по орбите','На таком большом расстоянии притяжение Земли уже не действует','Луну постоянно удерживает притяжение Солнца','В космосе нет воздуха, поэтому нет и силы тяжести'],e:'Сила тяготения F = Gm₁m₂/r² действует и на Луну. Она всё время поворачивает скорость Луны к Земле, поэтому Луна движется по кругу. Без притяжения Луна улетела бы по прямой.'},
+  {id:'gun',f:'momentum',q:'Почему ружьё отдаёт в плечо при выстреле?',a:['Пуля и ружьё получают равные импульсы в противоположные стороны','Пороховые газы вылетают из ствола назад, к плечу','Воздух перед пулей сжимается и толкает ружьё назад','Ствол сильно нагревается, расширяется и толкает приклад'],e:'До выстрела импульс системы равен нулю, значит после выстрела импульс пули p = mv по модулю равен импульсу ружья. Ружьё тяжелее и движется медленнее, но толчок ощутимый.'},
+  {id:'stairs',f:'power',q:'Почему, взбегая по лестнице, устаёшь сильнее, чем поднимаясь шагом?',a:['Та же работа делается быстрее, поэтому мощность больше','Бегом приходится совершать гораздо большую работу','При быстром беге сила тяжести, действующая на тело, заметно растёт','Бегом путь по лестнице получается намного длиннее'],e:'Работа подъёма одинаковая (mgh), а мощность N = A/t. Чем меньше время, тем больше мощность, а мышцы устают именно от большой мощности.'},
+  {id:'sand',f:'heat',q:'Почему летом песок на пляже горячий, а вода прохладная?',a:['Теплоёмкость воды больше, ей нужно больше тепла на нагрев','Вода отражает почти весь солнечный свет обратно','Песок тёмный и поэтому получает от солнца гораздо больше тепла','Вода постоянно перемешивается и вообще не нагревается'],e:'Q = cm(t₂ − t₁). У воды c ≈ 4200 Дж/(кг·°C), у песка примерно в 5 раз меньше. При одинаковом тепле вода нагревается гораздо слабее.'},
+  {id:'lines',f:'joule',q:'Почему по линиям электропередачи ток передают при очень высоком напряжении?',a:['Ток меньше, а потери на нагрев проводов растут как квадрат тока','При высоком напряжении электричество гораздо быстрее доходит до домов','Высокое напряжение защищает провода от дождя и коррозии','При высоком напряжении сопротивление проводов исчезает'],e:'По закону Джоуля — Ленца Q = I²Rt тепло в проводах пропорционально квадрату тока. Мощность P = UI: если поднять напряжение в 10 раз, ток станет в 10 раз меньше, а потери — в 100 раз меньше.'},
+  {id:'wet',f:'ohm',q:'Почему особенно опасно касаться проводов мокрыми руками?',a:['Сопротивление мокрой кожи меньше, поэтому ток через тело больше','Вода на руках увеличивает напряжение в электросети','Мокрые руки притягивают провод и не дают его отпустить','Вода сама вырабатывает ток, который добавляется к сетевому'],e:'По закону Ома I = U/R. Напряжение в сети то же, а сопротивление мокрой кожи гораздо меньше, поэтому ток через тело может стать опасным.'},
+  {id:'extender',f:'pel',q:'Почему мощный обогреватель нельзя включать в тонкий дешёвый удлинитель?',a:['Большой мощности нужен большой ток, и тонкие провода перегреются','Тонкий удлинитель снижает напряжение, и обогреватель сломается','Удлинитель накапливает лишний заряд и может ударить током','Обогреватель в удлинителе работает вдвое слабее и тратит больше энергии'],e:'P = U·I, значит I = P/U. При 220 В обогреватель на 2000 Вт тянет ток около 9 А. Тонкие провода с таким током сильно нагреваются, и может начаться пожар.'},
+  {id:'thunder',f:'speed',q:'Почему сначала видна молния, а гром слышен только через несколько секунд?',a:['Свет распространяется намного быстрее звука','Гром возникает через несколько секунд после молнии','Звук сначала уходит вверх и только потом вниз','Глаз замечает события быстрее, чем ухо'],e:'Свет и звук рождаются одновременно, но свет летит со скоростью 300 000 км/с, а звук около 340 м/с. Время пути t = s/v у звука гораздо больше. Задержка в 3 секунды — это примерно 1 км до грозы.'},
+  {id:'bass',f:'wave',q:'Почему у низких звуков (баса) длинная волна, а у высоких — короткая?',a:['Скорость звука одна и та же, поэтому при меньшей частоте волна длиннее','Низкие звуки распространяются быстрее, поэтому их волна длиннее','Низкие звуки громче, а громкий звук всегда даёт длинную волну','Высокие звуки быстрее затухают, и волна не успевает вырасти'],e:'v = λν, а скорость звука в воздухе одна для всех звуков. Значит λ = v/ν: при малой частоте длина волны большая, у баса — несколько метров.'},
+  {id:'drop',f:'freefall',q:'Тяжёлый и лёгкий шарики уронили одновременно с одной высоты. Сопротивления воздуха нет. Какой упадёт первым?',a:['Оба упадут одновременно','Тяжёлый: его сильнее тянет Земля','Лёгкий: его легче разогнать','Зависит от материала шариков'],e:'Время падения из h = gt²/2 зависит только от высоты и g, а масса в формулу не входит. Тяжёлое тело Земля тянет сильнее, но и разогнать его труднее — эти эффекты сокращаются.'},
+  {id:'table',f:'hrange',q:'Шарик скатывается со стола и падает на пол. Если толкнуть его сильнее, как изменится время падения?',a:['Не изменится','Увеличится','Уменьшится','Зависит от массы шарика'],e:'По вертикали шарик падает так же, как без толчка: t = √(2h/g). Горизонтальная скорость меняет только дальность L = v₀·t.'},
+  {id:'npp',f:'binding',q:'Откуда берётся энергия на атомной электростанции?',a:['Масса осколков деления меньше массы ядра, и разница становится энергией','Уран сгорает в реакторе, как уголь в обычной печи, только гораздо быстрее','Ядра урана притягивают электроны из воды и от этого нагреваются','Реактор берёт энергию из электросети и многократно её усиливает'],e:'Масса и энергия связаны формулой E = mc². Скорость света огромна, поэтому даже крошечная разница масс Δm даёт очень большую энергию.'},
+  {id:'waste',f:'halflife',q:'Почему радиоактивные отходы приходится хранить сотни лет?',a:['Число ядер уменьшается вдвое лишь за каждый период полураспада','Со временем радиоактивность отходов не уменьшается, а только растёт','Отходы нельзя перевозить, поэтому их оставляют на месте','Радиоактивность передаётся контейнеру и остаётся в нём'],e:'За один период полураспада T½ распадается половина ядер, за два — остаётся четверть, за n периодов — 1/2ⁿ. Если T½ равен десяткам лет, безопасный уровень наступит только через сотни лет.'},
+  {id:'spoon',f:'refr',q:'Почему ложка в стакане с водой кажется сломанной?',a:['В воде свет идёт медленнее и на границе сред преломляется','Вода увеличивает только ту часть ложки, что находится под водой','Стекло стакана отражает свет и искажает форму ложки','Под водой ложка немного изгибается от давления воды'],e:'Показатель преломления n = c/v: в воде свет идёт примерно в 1,33 раза медленнее, чем в воздухе. Поэтому на границе вода — воздух лучи меняют направление, и часть ложки под водой видна не там, где она на самом деле.'},
+  {id:'glasses',f:'lenspower',q:'Что означает надпись «+2» на очках?',a:['Оптическая сила линзы 2 дптр, а фокусное расстояние 0,5 м','Очки увеличивают все предметы ровно в 2 раза','Фокусное расстояние линзы этих очков равно 2 метрам','Очки подходят людям, которые видят в 2 раза хуже'],e:'Оптическая сила D = 1/F измеряется в диоптриях. +2 дптр — это собирающая линза с F = 1/2 м = 0,5 м. Знак «−» был бы у рассеивающей линзы.'},
+  {id:'magnifier',f:'magnif',q:'Почему лупа даёт увеличенное изображение, если поднести её близко к тексту?',a:['Текст ближе фокуса, и линза даёт мнимое увеличенное изображение','Стекло лупы толще в середине, поэтому всё под ним кажется крупнее','Лупа собирает больше света, а яркие буквы выглядят крупнее','Линза растягивает свет, и предметы за ней становятся шире'],e:'Если предмет ближе фокуса собирающей линзы, изображение получается мнимым, прямым и увеличенным. Увеличение Γ = f/d: изображение дальше от линзы, чем предмет, поэтому больше него.'}
+];
+// Каждый вопрос «Физики вокруг» запоминается: верно отвеченный вернётся через 1, 2, 4, 7, 15 дней,
+// ошибочный — в ближайшей тренировке. Сначала идут новые и те, что пора повторить.
+function lifePool(){const p=LIFE.filter(x=>{const f=F.find(g=>g.id===x.f);return f&&S.topics.includes(f.topic);});return p.length?p:LIFE;}
+function lifeRecord(id,ok){
+  S.life=S.life||{};const p=Object.assign({lv:0,next:0,r:0,w:0},S.life[id]);
+  if(ok){p.r++;p.lv=Math.min(5,p.lv+1);p.next=Date.now()+INTERVALS[p.lv]*864e5;}
+  else{p.w++;p.lv=Math.max(0,p.lv-1);p.next=Date.now();}
+  S.life[id]=p;save();
+}
+function lifeLeft(){const now=Date.now(),L=S.life||{};return lifePool().filter(x=>!L[x.id]||L[x.id].next<=now).length;}
+function genLife(){
+  sess.lifeUsed=sess.lifeUsed||[];
+  const now=Date.now(),L=S.life||{};
+  const left=lifePool().filter(x=>!sess.lifeUsed.includes(x.id)&&(!L[x.id]||L[x.id].next<=now));
+  if(!left.length)return null;
+  const score=x=>{const p=L[x.id];return (p?1:0)+Math.random();};
+  const it=left.map(x=>[score(x),x]).sort((a,b)=>a[0]-b[0])[0][1];
+  sess.lifeUsed.push(it.id);
+  const f=F.find(g=>g.id===it.f);
+  return {f,lifeId:it.id,text:it.q,opts:shuffle(it.a),correct:it.a[0],noCap:true,
+    expl:`<p>${it.e}</p><p class="small">Это объясняет формула «${f.name}»:</p><p>${eqF(f,f.lhs)}</p>`};
+}
+
+/* ===== Режимы «Ответ в общем виде» и «Задача-босс» ===== */
+// ans — правильный ответ (через пробелы, как в формулах выше); extra — лишние величины в клавиатуре.
+const TASKS=[
+  {id:'fallv',topic:'kin',t:'v',ans:'√ ( 2 g h )',extra:['m','t'],qn:{v:'скорость у земли'},laws:['freefall','vfall'],
+   text:'Тело падает без начальной скорости с высоты h. С какой скоростью оно ударится о землю? Сопротивлением воздуха пренебречь.',
+   steps:['Время падения находим из h = gt²/2: t = √(2h/g).','Скорость при свободном падении растёт как v = g·t.','Подставляем: v = g·√(2h/g) = √(2gh). Масса не нужна.']},
+  {id:'accv',topic:'kin',t:'v',ans:'√ ( 2 a s )',extra:['t','v0'],qn:{v:'конечная скорость'},laws:['disp','accel'],
+   text:'Автомобиль трогается с места с постоянным ускорением a и проходит путь s. Какую скорость он набирает?',
+   steps:['Движение из покоя, поэтому s = at²/2, отсюда t = √(2s/a).','Скорость v = a·t = a·√(2s/a) = √(2as).']},
+  {id:'cliff',topic:'kin',t:'t',ans:'√ ( 2 h / g )',extra:['v0','L'],qn:{t:'время полёта',h:'высота обрыва'},laws:['freefall','hthrow'],
+   text:'Камень бросили горизонтально с обрыва высотой h со скоростью v₀. Сколько времени он летит?',
+   steps:['По вертикали камень падает так же, как без броска: h = gt²/2.','Значит t = √(2h/g). Начальная горизонтальная скорость на время полёта не влияет.']},
+  {id:'wheel',topic:'kin',t:'ac',ans:'4 pi ² Rc / T ²',extra:['v','om'],qn:{T:'период обращения',Rc:'радиус колеса'},laws:['vcirc','acirc'],
+   text:'Точка на ободе колеса радиусом R делает один оборот за время T. Найди её центростремительное ускорение.',
+   steps:['Скорость точки v = 2πR/T.','Ускорение a<sub>ц</sub> = v²/R = (2πR/T)²/R = 4π²R/T².'],tip:'Число 4 можно набрать как 2·2 или записать (2π)².'},
+  {id:'push',topic:'dyn',t:'v',ans:'F t / m',extra:['a','s'],qn:{v:'скорость в конце разгона'},laws:['newton2','accel'],
+   text:'Брусок массой m под действием постоянной силы F разгоняется из состояния покоя. Трения нет. Какую скорость он наберёт за время t?',
+   steps:['Ускорение по второму закону Ньютона: a = F/m.','Из покоя скорость v = a·t = Ft/m.']},
+  {id:'spring',topic:'dyn',t:'x',ans:'m g / k',extra:['F','a'],laws:['weight','hooke'],
+   text:'Груз массой m подвесили к пружине жёсткостью k. На сколько растянется пружина, когда груз успокоится?',
+   steps:['Груз в равновесии: сила упругости равна силе тяжести.','k·x = m·g, отсюда x = mg/k.']},
+  {id:'orbit',topic:'dyn',t:'v',ans:'√ ( G Mpl / r )',extra:['m1','g'],qn:{v:'скорость спутника',r:'радиус орбиты',m1:'масса спутника'},laws:['grav','newton2','acirc'],
+   text:'Спутник движется по круговой орбите радиусом r вокруг планеты массой M. Найди скорость спутника.',
+   steps:['Сила тяготения сообщает спутнику центростремительное ускорение: G·m·M/r² = m·v²/r.','Масса спутника m сокращается: v² = GM/r.','v = √(GM/r).']},
+  {id:'upward',topic:'cons',t:'h',ans:'v ² / ( 2 g )',extra:['m','t'],qn:{v:'начальная скорость',h:'максимальная высота'},laws:['ek','ep'],
+   text:'Мяч бросили вертикально вверх со скоростью v. На какую наибольшую высоту он поднимется? Сопротивлением воздуха пренебречь.',
+   steps:['Механическая энергия сохраняется: в начале кинетическая, в верхней точке потенциальная.','mv²/2 = mgh, масса сокращается.','h = v²/(2g).']},
+  {id:'crane',topic:'cons',t:'N',ans:'m g h / t',extra:['v','F'],laws:['weight','work','power'],
+   text:'Подъёмный кран равномерно поднимает груз массой m на высоту h за время t. Какую мощность развивает кран?',
+   steps:['При равномерном подъёме сила крана равна силе тяжести: F = mg.','Работа A = F·h = mgh.','Мощность N = A/t = mgh/t.']},
+  {id:'pfromE',topic:'cons',t:'p',ans:'√ ( 2 m Ek )',extra:['v','h'],laws:['ek','momentum'],
+   text:'Тело массой m имеет кинетическую энергию Eк. Найди его импульс.',
+   steps:['Из E<sub>к</sub> = mv²/2 выражаем скорость: v = √(2E<sub>к</sub>/m).','Импульс p = m·v = m·√(2E<sub>к</sub>/m) = √(2mE<sub>к</sub>).']},
+  {id:'brick',topic:'hydro',t:'pr',ans:'m g / S',extra:['V','rho'],qn:{S:'площадь опоры'},laws:['weight','pressure'],
+   text:'Брусок массой m лежит на столе, площадь его опоры S. Какое давление он оказывает на стол?',
+   steps:['Брусок давит на стол с силой, равной силе тяжести: F = mg.','Давление p = F/S = mg/S.']},
+  {id:'depth',topic:'hydro',t:'h',ans:'m / ( rho S )',extra:['V','F'],qn:{h:'глубина',rho:'плотность воды',S:'площадь опоры бруска'},laws:['weight','pressure','hydrop'],
+   text:'Брусок массой m с площадью опоры S давит на стол. На какой глубине давление воды плотностью ρ будет таким же?',
+   steps:['Давление бруска p = mg/S.','Давление воды на глубине p = ρgh.','Приравниваем: ρgh = mg/S, g сокращается: h = m/(ρS).']},
+  {id:'kettle',topic:'therm',t:'t2',ans:'t1 + Pe t / ( c m )',extra:['U','Q'],qn:{Pe:'мощность чайника',t:'время работы'},laws:['heat'],
+   text:'Электрочайник мощностью P нагревает воду массой m, начальная температура воды t₁. Какой станет температура через время t? Потерями тепла пренебречь.',
+   steps:['За время t чайник выделяет тепло Q = P·t.','Вода получает Q = cm(t₂ − t₁).','P·t = cm(t₂ − t₁), отсюда t₂ = t₁ + Pt/(cm).']},
+  {id:'heatq',topic:'el',t:'Q',ans:'q ² R / t',extra:['U','Pe'],qn:{q:'прошедший заряд'},laws:['charge','joule'],
+   text:'Через резистор сопротивлением R за время t прошёл заряд q. Ток был постоянным. Какое количество теплоты выделилось?',
+   steps:['Сила тока I = q/t.','По закону Джоуля — Ленца Q = I²Rt = (q/t)²·R·t = q²R/t.']},
+  {id:'lamp',topic:'el',t:'R',ans:'U ² / Pe',extra:['I','t'],qn:{Pe:'мощность лампы'},laws:['pel','ohm'],
+   text:'Лампа рассчитана на напряжение U и мощность P. Найди сопротивление её нити.',
+   steps:['Мощность P = U·I, а по закону Ома I = U/R.','P = U·U/R = U²/R, отсюда R = U²/P.']},
+  {id:'echo',topic:'osc',t:'s',ans:'v t / 2',extra:['nu','lam'],qn:{s:'расстояние до стены',v:'скорость звука',t:'время до эха'},laws:['speed'],
+   text:'Человек крикнул и услышал эхо от стены через время t. Скорость звука v. Найди расстояние до стены.',
+   steps:['Звук дошёл до стены и вернулся, то есть прошёл путь 2s.','2s = v·t, отсюда s = vt/2.']},
+  {id:'wavelen',topic:'osc',t:'lam',ans:'s / ( nu t )',extra:['T','v0'],qn:{s:'пройденное расстояние'},laws:['speed','wave'],
+   text:'Звуковая волна частотой ν за время t проходит расстояние s. Найди длину волны.',
+   steps:['Скорость волны v = s/t.','Длина волны λ = v/ν = s/(νt).']},
+  {id:'pernucl',topic:'nuc',t:'eps',ans:'dm cl ² / Anuc',extra:['Z','Nn'],laws:['binding','nucleons'],
+   text:'Ядро с массовым числом A имеет дефект масс Δm. Найди энергию связи, приходящуюся на один нуклон (удельную энергию связи).',
+   steps:['Энергия связи всего ядра E = Δm·c².','В ядре A нуклонов, поэтому на один приходится ε = Δm·c²/A.']},
+  {id:'charge',topic:'nuc',t:'q',ans:'( Anuc - Nn ) el',extra:['Z','dm'],qn:{q:'заряд ядра'},gt:[['Anuc','Nn']],laws:['nucleons','nuccharge'],
+   text:'Ядро содержит N нейтронов, его массовое число A. Найди заряд ядра.',
+   steps:['Число протонов Z = A − N.','Каждый протон несёт заряд e, поэтому q = Z·e = (A − N)·e.']},
+  {id:'image',topic:'opt',t:'fl',ans:'Ff dl / ( dl - Ff )',extra:['Dopt','Gam'],gt:[['dl','Ff']],laws:['thinlens'],
+   text:'Предмет стоит на расстоянии d от собирающей линзы с фокусным расстоянием F, причём d > F. На каком расстоянии от линзы получится изображение?',
+   steps:['Формула тонкой линзы: 1/F = 1/d + 1/f.','1/f = 1/F − 1/d = (d − F)/(Fd).','f = Fd/(d − F).']},
+  {id:'magn2',topic:'opt',t:'Gam',ans:'Ff / ( dl - Ff )',extra:['fl','Dopt'],gt:[['dl','Ff']],laws:['thinlens','magnif'],
+   text:'Предмет стоит на расстоянии d от собирающей линзы с фокусным расстоянием F, причём d > F. Во сколько раз изображение больше предмета?',
+   steps:['Расстояние до изображения из формулы линзы: f = Fd/(d − F).','Увеличение Γ = f/d = F/(d − F).']}
+];
+const BOSSES=[
+  {id:'boss_kin',topic:'kin',title:'Бросок с крыши',t:'v',ans:'√ ( v0 ² + 2 g h )',extra:['L','t'],qn:{v:'скорость при ударе о землю',v0:'начальная скорость',h:'высота крыши'},laws:['hthrow','vfall','freefall'],
+   text:'С крыши высотой h горизонтально бросили мяч со скоростью v₀. С какой по модулю скоростью мяч ударится о землю? Сопротивлением воздуха пренебречь.',
+   steps:['По горизонтали скорость не меняется и остаётся равной v₀.','По вертикали мяч падает как свободное тело: v<sub>y</sub> = g·t, а t = √(2h/g), значит v<sub>y</sub> = √(2gh).','Горизонтальная и вертикальная скорости перпендикулярны, поэтому по теореме Пифагора v = √(v₀² + v<sub>y</sub>²) = √(v₀² + 2gh).']},
+  {id:'boss_dyn',topic:'dyn',title:'Поворот на пределе',t:'v',ans:'√ ( F Rc / m )',extra:['g','om'],qn:{v:'наибольшая скорость',F:'наибольшая сила трения',Rc:'радиус поворота'},laws:['newton2','acirc'],
+   text:'Автомобиль массой m проходит поворот радиусом R. Сила трения шин о дорогу не может быть больше F. С какой наибольшей скоростью можно пройти поворот без заноса?',
+   steps:['Поворачивать машину заставляет сила трения, она сообщает центростремительное ускорение.','По второму закону Ньютона F = m·a<sub>ц</sub> = m·v²/R.','v² = FR/m, отсюда v = √(FR/m).']},
+  {id:'boss_cons',topic:'cons',title:'Баллистический маятник',t:'h',ans:'( m1 v / ( m1 + m2 ) ) ² / ( 2 g )',extra:['t','k'],qn:{m1:'масса пули',m2:'масса бруска',v:'скорость пули',h:'высота подъёма'},laws:['momentum','ek','ep'],
+   text:'Пуля массой m₁ летит горизонтально со скоростью v и застревает в бруске массой m₂, подвешенном на длинных нитях. На какую высоту поднимется брусок с пулей?',
+   steps:['Удар неупругий: механическая энергия при нём не сохраняется, зато сохраняется импульс.','m₁v = (m₁ + m₂)u, отсюда скорость после удара u = m₁v/(m₁ + m₂).','После удара сохраняется энергия: (m₁ + m₂)u²/2 = (m₁ + m₂)gh, значит h = u²/(2g).','h = (m₁v/(m₁ + m₂))²/(2g).']},
+  {id:'boss_hydro',topic:'hydro',title:'Сколько под водой',t:'Vp',ans:'rhot V / rho',extra:['g','h'],qn:{rho:'плотность воды',V:'объём бруска'},laws:['density','weight','archimedes'],
+   text:'Деревянный брусок объёмом V плавает в воде плотностью ρ. Плотность дерева ρ<sub>т</sub>. Найди объём погружённой части бруска.',
+   steps:['Брусок плавает, значит сила Архимеда равна силе тяжести.','Масса бруска m = ρ<sub>т</sub>·V, сила тяжести mg = ρ<sub>т</sub>Vg.','Сила Архимеда ρgV<sub>п</sub>. Приравниваем: ρgV<sub>п</sub> = ρ<sub>т</sub>Vg.','V<sub>п</sub> = ρ<sub>т</sub>V/ρ.']},
+  {id:'boss_therm',topic:'therm',title:'Кипятильник',t:'t',ans:'c m ( t2 - t1 ) R / U ²',extra:['I','Pe'],qn:{t:'время нагрева',R:'сопротивление кипятильника'},gt:[['t2','t1']],laws:['heat','pel','ohm'],
+   text:'Кипятильник сопротивлением R включён в сеть напряжением U. Сколько времени нужно, чтобы нагреть воду массой m от температуры t₁ до t₂? Потерями тепла пренебречь.',
+   steps:['Мощность кипятильника P = U·I, а I = U/R, значит P = U²/R.','За время t он выделяет тепло Q = P·t = U²t/R.','Вода получает Q = cm(t₂ − t₁).','U²t/R = cm(t₂ − t₁), отсюда t = cm(t₂ − t₁)R/U².']},
+  {id:'boss_el',topic:'el',title:'Поток электронов',t:'ne',ans:'Pe t / ( U el )',extra:['R','Q'],qn:{Pe:'мощность лампы'},laws:['pel','charge','nuccharge'],
+   text:'Лампа мощностью P работает при напряжении U. Сколько электронов проходит через нить лампы за время t?',
+   steps:['Сила тока I = P/U.','За время t проходит заряд q = I·t = Pt/U.','Каждый электрон несёт заряд e, значит число электронов N<sub>e</sub> = q/e = Pt/(Ue).']},
+  {id:'boss_osc',topic:'osc',title:'Эхо в горах',t:'lam',ans:'2 s / ( nu t )',extra:['T','v'],qn:{s:'расстояние до скалы',t:'время до эха'},laws:['speed','wave'],
+   text:'Турист крикнул, стоя на расстоянии s от скалы, и услышал эхо через время t. Частота звука ν. Найди длину звуковой волны.',
+   steps:['Звук дошёл до скалы и вернулся: путь 2s за время t, значит скорость звука v = 2s/t.','Длина волны λ = v/ν = 2s/(νt).']},
+  {id:'boss_opt',topic:'opt',title:'Линза без фокуса',t:'Gam',ans:'1 / ( Dopt dl - 1 )',extra:['fl','Ff'],laws:['lenspower','thinlens','magnif'],
+   text:'Собирающая линза с оптической силой D даёт действительное изображение предмета, который стоит на расстоянии d от неё. Найди увеличение линзы.',
+   steps:['Фокусное расстояние F = 1/D.','Расстояние до изображения из формулы линзы: f = Fd/(d − F).','Γ = f/d = F/(d − F) = (1/D)/(d − 1/D) = 1/(Dd − 1).']},
+  {id:'boss_nuc',topic:'nuc',title:'Энергия из масс',t:'Eb',ans:'( Z mp + ( Anuc - Z ) mn - Mya ) cl ²',extra:['Nn','dm'],gt:[['Anuc','Z']],laws:['nucleons','binding'],
+   text:'Ядро содержит Z протонов, его массовое число A. Масса протона m<sub>p</sub>, масса нейтрона m<sub>n</sub>, масса ядра M<sub>я</sub>. Найди энергию связи ядра.',
+   steps:['Число нейтронов N = A − Z.','Масса всех нуклонов по отдельности: Z·m<sub>p</sub> + (A − Z)·m<sub>n</sub>.','Дефект масс Δm = Z·m<sub>p</sub> + (A − Z)·m<sub>n</sub> − M<sub>я</sub>.','Энергия связи E = Δm·c² = (Z·m<sub>p</sub> + (A − Z)·m<sub>n</sub> − M<sub>я</sub>)·c².']}
+];
+BOSSES.forEach(b=>b.boss=true);
+function taskF(T){
+  if(T._f)return T._f;
+  const f={id:T.id,topic:T.topic,name:T.title||'Задача',lhs:T.t,rhs:T.ans,forms:{},qn:T.qn||{},gt:T.gt||[]};
+  f.rhsAst=parse(tokenize(T.ans));f.formAst={};f.formAst[T.t]=f.rhsAst;
+  return T._f=f;
+}
+function taskPool(){const p=TASKS.filter(T=>S.topics.includes(T.topic));return p.length?p:TASKS;}
+function genTask(T){
+  const f=taskF(T);
+  const own=[...collect(f.rhsAst)];
+  return {f,t:T.t,task:T,boss:!!T.boss,palette:shuffle([...new Set(own.concat(T.extra||[]))].filter(v=>v!==T.t)),
+    toks:[],fb:null,counted:false,fid:T.boss?'boss:'+T.topic:'task:'+T.id};
+}
+function genGeneral(){
+  sess.taskUsed=sess.taskUsed||[];
+  const pool=taskPool().filter(T=>!sess.taskUsed.includes(T.id));
+  const st=T=>(S.tasks&&S.tasks[T.id])||{};
+  const T=shuffle(pool).sort((a,b)=>(st(a).done?1:0)-(st(b).done?1:0))[0];
+  sess.taskUsed.push(T.id);return genTask(T);
+}
+function genBoss(){return genTask(BOSSES.find(b=>b.topic===sess.boss));}
+const GEN={units:genUnits,life:genLife,general:genGeneral,boss:genBoss};
+
+// Учёт задач и кубков
+function taskTried(q,ok){
+  S.tasks=S.tasks||{};S.ach=S.ach||{};
+  const r=S.tasks[q.task.id]||{done:false,clean:false};
+  if(ok){r.done=true;r.clean=true;if(q.boss&&!S.ach[q.task.topic]){S.ach[q.task.topic]=Date.now();q.trophy=true;}}
+  S.tasks[q.task.id]=r;save();
+}
+function taskDone(q){
+  if(!q.task)return;
+  S.tasks=S.tasks||{};const r=S.tasks[q.task.id]||{done:false,clean:false};r.done=true;r.seen=true;S.tasks[q.task.id]=r;save();
+}
+const trophyCount=()=>Object.keys(S.ach||{}).filter(k=>TOPICS.some(t=>t.id===k)).length;
+const I_CUP='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>';
+
+function buildHead(q){
+  if(!q.task)return `<p class="qtext"><span class="fname">${q.f.name}.</span> Вырази ${sym(q.t)} (${nm(q.f,q.t)}).</p>`;
+  return `${q.boss?`<p class="bosstag">${I_CUP}<span>Задача-босс · ${TOPICS.find(t=>t.id===q.task.topic).n}</span></p>`:''}
+  <p class="qtext">${q.boss?`<span class="fname">${q.task.title}.</span> `:''}${q.task.text}</p>
+  <p class="ask">Найди ${sym(q.t)} в общем виде — только через величины из условия.${q.task.tip?' '+q.task.tip:''}</p>`;
+}
+function stepsHTML(T){return `<ol class="steps">${T.steps.map(s=>`<li>${s}</li>`).join('')}</ol>`;}
+function lawsHTML(T){return `<ul class="forms">${T.laws.map(id=>{const f=F.find(g=>g.id===id);return f?`<li>${eqF(f,f.lhs)}<span>${f.name}</span></li>`:'';}).join('')}</ul>`;}
+function taskOkHTML(q){
+  return `<p>${eqF(q.f,q.t)}</p><p class="small">Засчитывается любая равносильная запись.</p>
+  ${q.trophy?`<p class="cupline">${I_CUP}<span>Кубок за тему «${TOPICS.find(t=>t.id===q.task.topic).n}» получен!</span></p>`:''}
+  <h3>Решение</h3>${stepsHTML(q.task)}`;
+}
+function taskExplainHTML(q){
+  const T=q.task,fb=q.fb;let x='';
+  if(fb.kind==='final')x+=`<h3>Где ошибка</h3><p>Ты записал: <span class="fx">${Q[q.t].s}<span class="eq">=</span>${fb.toks.map(tokHTML).join('')}</span></p>${fb.msg}`;
+  x+=`<h3>Решение</h3>${stepsHTML(T)}<h3>Ответ</h3><p>${eqF(q.f,q.t)}</p><h3>Какие законы понадобились</h3>${lawsHTML(T)}`;
+  if(q.boss)x+=`<p class="small">Кубок даётся за решение с первой попытки. Возвращайся к этой задаче позже — разбор поможет.</p>`;
+  return fbHTML('final','Разберём решение',x);
+}
+function bossesHTML(){
+  return `<button class="link back" data-act="home">← На главную</button>
+  <h1 class="title">Задачи-боссы</h1>
+  <p class="lead">Одна сложная задача на каждую тему: нужно соединить несколько законов. Реши с первой попытки без подсказок — получишь кубок.</p>
+  <p class="status">Кубков: ${trophyCount()} из ${BOSSES.length}</p>
+  <div class="bosses">${BOSSES.map(b=>{const t=TOPICS.find(x=>x.id===b.topic),r=(S.tasks||{})[b.id]||{},cup=(S.ach||{})[b.topic];
+    const st=cup?`<span class="bst cup">${I_CUP}Кубок</span>`:r.done?'<span class="bst">Решена</span>':'<span class="bst new">Не решена</span>';
+    return `<button class="boss" data-act="boss" data-id="${b.topic}"><span><span class="pl">${t.n}</span><span class="pv">${b.title}</span></span>${st}</button>`;}).join('')}</div>`;
+}
+function endExtraHTML(){
+  if(sess.mode==='boss'){
+    const q=sess.q,T=q.task,r=(S.tasks||{})[T.id]||{};
+    if(q.trophy)return `<div class="cupbig">${I_CUP}<p><b>Кубок получен!</b><br>Тема «${TOPICS.find(t=>t.id===T.topic).n}» покорена с первой попытки.</p></div>`;
+    if((S.ach||{})[T.topic])return `<p class="lead">Кубок за эту тему у тебя уже есть.</p>`;
+    return `<p class="lead">${r.done?'Задача решена, но не с первой попытки.':'Задача пока не решена.'} Кубок даётся за решение с первой попытки — попробуй снова позже.</p>`;
+  }
+  if(sess.mode==='life'){const n=lifeLeft();
+    return `<p class="lead" style="margin-top:6px">Верно отвеченные вопросы вернутся через несколько дней, ошибочные — в следующей тренировке. ${n?`Новых и ждущих повторения по выбранным темам: ${n}.`:'По выбранным темам всё пройдено — загляни через день или выбери другие темы.'}</p>`;}
+  if(sess.mode==='general'){
+    const solved=sess.taskUsed?sess.taskUsed.filter(id=>((S.tasks||{})[id]||{}).done).length:0;
+    return `<p class="lead" style="margin-top:6px">Решено задач: ${solved} из ${sess.done}.</p>`;
+  }
+  return '';
+}
+
+
+
+/* ===== Справочник: решённые задачи ===== */
+function taskSeen(q){
+  if(!q||!q.task)return;
+  S.tasks=S.tasks||{};const r=S.tasks[q.task.id]||{done:false,clean:false};r.seen=true;S.tasks[q.task.id]=r;save();
+}
+const I_CHEV_D='<svg class="dchev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+function shortText(s){s=s.replace(/<[^>]+>/g,'');const m=s.match(/^.*?[.?!](\s|$)/);s=m?m[0].trim():s;return s.length>90?s.slice(0,88).trim()+'…':s;}
+function restText(s){
+  if(shortText(s).endsWith('…'))return `<p>${s}</p>`;
+  const m=s.match(/^.*?[.?!](\s|$)/);const r=m?s.slice(m[0].length).trim():'';
+  return r?`<p>${r}</p>`:'';
+}
+function refTasksHTML(){
+  const st=T=>(S.tasks||{})[T.id]||{};
+  const open=TASKS.filter(T=>st(T).done||st(T).seen);
+  if(!open.length)return `<div class="empty"><p>Здесь появятся разборы задач, которые ты решил или разобрал.</p><p class="about">Чтобы ответ нельзя было подсмотреть заранее, задача открывается только после того, как ты попробуешь её решить.</p><button class="btn primary wide" data-act="gogeneral">Решать задачи</button></div>`;
+  const total=TASKS.length;
+  return `<p class="status">Открыто ${open.length} из ${total}.</p>`+TOPICS.map(t=>{
+    const list=open.filter(T=>T.topic===t.id);if(!list.length)return '';
+    return `<h2>${t.n}</h2>${list.map(T=>{
+      const r=st(T);
+      const badge=r.clean?'<span class="bst ok">С первой попытки</span>':r.done?'<span class="bst">Решена</span>':'<span class="bst new">Разобрана</span>';
+      return `<details class="tdet"><summary><span><span class="pl">Задача</span><span class="pv">${shortText(T.text)}</span></span><span class="tside">${badge}${I_CHEV_D}</span></summary>
+        <div class="tbody">${restText(T.text)}<h3>Решение</h3>${stepsHTML(T)}<h3>Ответ</h3><p>${eqF(taskF(T),T.t)}</p><h3>Какие законы понадобились</h3>${lawsHTML(T)}</div></details>`;}).join('')}`;}).join('');
+}
+
+/* ===== Справочник: единицы ===== */
+let refTab='f';
+const PREFIXES=[['нано','н',-9,'1 нм = 10<sup>−9</sup> м'],['микро','мк',-6,'1 мкКл = 10<sup>−6</sup> Кл'],['милли','м',-3,'1 мА = 0,001 А'],['санти','с',-2,'1 см = 0,01 м'],['кило','к',3,'1 кПа = 1000 Па'],['мега','М',6,'1 МВт = 1 000 000 Вт'],['гига','Г',9,'1 ГДж = 10<sup>9</sup> Дж']];
+const CONV_REF=[
+  ['Скорость',[['1 км/ч','1/3,6 м/с','Раздели на 3,6: 72 км/ч = 72 : 3,6 = 20 м/с.'],['1 м/с','3,6 км/ч','Умножь на 3,6: 10 м/с = 36 км/ч.']]],
+  ['Время',[['1 мин','60 с',''],['1 ч','3600 с','60 мин × 60 с. Частая ошибка — считать, что в часе 100 минут.']]],
+  ['Масса',[['1 г','10<sup>−3</sup> кг','Основная единица массы в СИ — килограмм, а не грамм.'],['1 т','10<sup>3</sup> кг','']]],
+  ['Площадь',[['1 см²','10<sup>−4</sup> м²','1 см = 10<sup>−2</sup> м, а при возведении в квадрат степень удваивается.'],['1 мм²','10<sup>−6</sup> м²','Сечение проводов часто дают в мм².']]],
+  ['Объём',[['1 см³','10<sup>−6</sup> м³','Степень утраивается: (10<sup>−2</sup>)³ = 10<sup>−6</sup>.'],['1 л = 1 дм³','10<sup>−3</sup> м³','В кубическом метре 1000 литров.']]],
+  ['Плотность',[['1 г/см³','1000 кг/м³','Вода: 1 г/см³ = 1000 кг/м³, сталь: 7,8 г/см³ = 7800 кг/м³.']]],
+  ['Энергия',[['1 кВт·ч','3,6·10<sup>6</sup> Дж','1000 Вт × 3600 с. В киловатт-часах считает электросчётчик.']]]
+];
+function refUnitsHTML(){
+  return `<h2>Приставки</h2>
+  <p class="about">Приставка заменяет множитель — степень десяти. Чтобы перевести в основные единицы, умножь число на этот множитель.</p>
+  <table class="utab"><thead><tr><th>Приставка</th><th>Множитель</th><th>Пример</th></tr></thead><tbody>
+  ${PREFIXES.map(([n,s,e,ex])=>`<tr><td>${n} (${s})</td><td>10<sup>${String(e).replace('-','−')}</sup></td><td>${ex}</td></tr>`).join('')}</tbody></table>
+  <h2>Как переводить</h2>
+  ${CONV_REF.map(([g,rows])=>`<div class="fitem"><span class="fname">${g}</span><ul class="conv">${rows.map(([a,b,c])=>`<li><span class="ceq">${a} = ${b}</span>${c?`<span class="about">${c}</span>`:''}</li>`).join('')}</ul></div>`).join('')}
+  <h2>Из чего состоят единицы</h2>
+  <p class="about">Основные единицы СИ: метр (м), килограмм (кг), секунда (с), ампер (А), кельвин (К). Остальные получаются из формул.</p>
+  ${DERIVED.map(([u,what,d,expl])=>`<div class="fitem"><div class="fhead"><span class="fname">1 ${u} = ${baseHTML(d)}</span><span class="fstate">${what}</span></div><p class="about">${expl}</p></div>`).join('')}`;
+}
+
+/* ===== Состояние экрана ===== */
+const root=document.getElementById('app');
+let view='home',sess=null,resetArm=false;
+function startSession(mode,boss){sess={mode,boss,n:mode==='boss'?1:mode==='general'?Math.max(1,Math.min(5,taskPool().length)):mode==='life'?Math.max(1,Math.min(8,lifeLeft())):8,i:0,score:0,done:0,wrong:[],recent:[]};nextQ();}
+function nextQ(){
+  if(sess.i>=sess.n){view='end';render();return;}
+  let m=sess.mode==='mix'?pick(['whatif','build','verdict','whatif','build','verdict','units','life']):sess.mode;
+  if(GEN[m]){const q=GEN[m]();if(q){q.mode=m;sess.q=q;sess.answered=false;view='q';render();return;}m=pick(['whatif','build','verdict']);}
+  const f=pickFormula(sess.recent,m==='whatif'?mono:null);sess.recent.push(f.id);if(sess.recent.length>5)sess.recent.shift();
+  const q=m==='whatif'?genWhatIf(f):m==='build'?genBuild(f):genVerdict(f);
+  q.mode=m;sess.q=q;sess.answered=false;view='q';render();
+}
+const isF=q=>!!q.f&&F.includes(q.f);
+function finish(ok){haptic(ok?'ok':'bad');const q=sess.q;sess.done++;if(ok)sess.score++;else if(isF(q)&&!sess.wrong.includes(q.f.id))sess.wrong.push(q.f.id);if(isF(q))record(q.f.id,ok);else{touchStreak();save();}if(q.task)taskTried(q,ok);if(q.lifeId)lifeRecord(q.lifeId,ok);}
+
+/* ===== Отрисовка ===== */
+function stats(){
+  const now=Date.now();let seen=0,learned=0,due=0;
+  for(const f of F){if(!S.prog[f.id])continue;seen++;const p=prog(f.id);if(p.lv>=3)learned++;if(p.next<=now)due++;}
+  return {seen,learned,due};
+}
+const HMODES=[{id:'mix',n:'Вперемешку',d:'Формулы, единицы и вопросы из жизни по очереди. Лучший вариант для ежедневного повторения.'}].concat(MODES);
+const allTopics=()=>TOPICS.every(t=>S.topics.includes(t.id));
+function topicNote(){
+  const fs=F.filter(f=>S.topics.includes(f.topic)),now=Date.now();
+  const learned=fs.filter(f=>S.prog[f.id]&&prog(f.id).lv>=3).length,due=fs.filter(f=>S.prog[f.id]&&prog(f.id).next<=now).length;
+  return `${fs.length} ${plural(fs.length,'формула','формулы','формул')}, выучено ${learned}`+(due?`, ${due} пора повторить`:'')+'.';
+}
+const CHEV='<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+const TICK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17l9-10"/></svg>';
+let sheet=null,sheetAnim=false;
+function topicsLabel(){
+  if(allTopics())return 'Все темы';
+  const names=TOPICS.filter(t=>S.topics.includes(t.id)).map(t=>t.n);
+  return names.length<=2?names.join(', '):`${names[0]} и ещё ${names.length-1}`;
+}
+function sheetHTML(){
+  if(!sheet)return '';
+  let body;
+  if(sheet==='mode'){
+    const mode=S.mode||'mix';
+    body=`<h3 id="pop-t">Режим</h3><p class="psub">Выбери, как тренироваться.</p>
+    ${HMODES.map(m=>`<button class="row ${mode===m.id?'on':''}" role="radio" aria-checked="${mode===m.id}" data-act="mode" data-id="${m.id}"><span class="mark radio">${TICK}</span><span><span class="ot">${m.n}</span><span class="od">${m.d}</span></span></button>`).join('')}`;
+  }else{
+    const all=allTopics();
+    body=`<h3 id="pop-t">Темы</h3><p class="psub">Можно выбрать несколько.</p>
+    <button class="row all ${all?'on':''}" role="checkbox" aria-checked="${all}" data-act="topic" data-id="all"><span class="mark">${TICK}</span><span class="ot">Все темы</span><span class="rc">${F.length}</span></button>
+    ${TOPICS.map(t=>{const on=S.topics.includes(t.id),n=F.filter(f=>f.topic===t.id).length;
+      return `<button class="row ${on?'on':''}" role="checkbox" aria-checked="${on}" data-act="topic" data-id="${t.id}"><span class="mark">${TICK}</span><span class="ot">${t.n}</span><span class="rc">${n} ${plural(n,'формула','формулы','формул')}</span></button>`;}).join('')}
+    <button class="btn primary wide" data-act="close">Готово</button>`;
+  }
+  return `<div class="pop-bg${sheetAnim?' anim':''}" data-act="close"><div class="pop" role="dialog" aria-modal="true" aria-labelledby="pop-t" data-act="noop"><div class="grab"></div>${body}</div></div>`;
+}
+function homeHTML(){
+  const mode=S.mode||'mix',all=allTopics();
+  const st=stats(),n=streakNow();
+  const streak='';
+  const dueTxt=st.due>0?` ${st.due} ${plural(st.due,'формула ждёт','формулы ждут','формул ждут')} повторения.`:'';
+  return `<div class="home"><header class="head"><span class="logo">FizHub</span><span class="streak">${n>0?`${n} ${plural(n,'день','дня','дней')} подряд`:''}</span></header>
+  <div class="hero">
+    <span class="fx">E<span class="eq">=</span>mc<sup>2</sup></span>
+    <p>Массу увеличили в 2 раза. Что станет с энергией?</p>
+  </div>
+  <p class="lead">${inTG&&tg.initDataUnsafe&&tg.initDataUnsafe.user?`Привет, ${esc(tg.initDataUnsafe.user.first_name)}! `:''}Тренажёр формул по физике. Проверяет, понимаешь ли ты связь величин, а не порядок букв.</p>
+  <p class="status">Выучено ${st.learned} из ${F.length} формул.${dueTxt}${trophyCount()?` Кубков: ${trophyCount()} из ${BOSSES.length}.`:''}</p>
+  <h2>Тренировка</h2>
+  <button class="pick" data-act="sheet" data-id="mode" aria-haspopup="dialog"><span><span class="pl">Режим</span><span class="pv">${HMODES.find(m=>m.id===mode).n}</span><span class="pd">${HMODES.find(m=>m.id===mode).d}</span></span>${CHEV}</button>
+  <button class="pick" data-act="sheet" data-id="topics" aria-haspopup="dialog"><span><span class="pl">Темы</span><span class="pv">${topicsLabel()}</span><span class="pd">${topicNote()}</span></span>${CHEV}</button>
+  <button class="btn primary wide start" data-act="start" data-mode="${mode}">${mode==='boss'?'Выбрать задачу-босса':'Начать тренировку'}</button>
+  <p class="hint">${mode==='general'?'До 5 задач по выбранным темам. Сначала те, что ещё не решены.':mode==='boss'?'Одна задача на тему, темы выбираются в списке.':mode==='life'?(lifeLeft()?`Вопросов на сегодня: ${Math.min(8,lifeLeft())}. Верно отвеченные вернутся через несколько дней.`:'По выбранным темам всё пройдено. Вопросы вернутся для повторения через 1–2 дня.'):mode==='units'?'8 быстрых вопросов про единицы измерения.':'8 вопросов, около 5 минут. Сначала идут формулы, которые пора повторить.'}</p>
+  <div class="reset"><button class="link" data-act="reset">${resetArm?'Нажми ещё раз, чтобы стереть весь прогресс':'Сбросить прогресс'}</button></div></div>${sheetHTML()}`;
+}
+function fbHTML(kind,title,html){return `<div class="fb ${kind}" role="status"><p class="fbt">${title}</p><div class="fbx">${html}</div></div>`;}
+const nextBtn=()=>`<button class="btn primary wide next" data-act="next">${sess.i+1>=sess.n?'Посмотреть итог':'Дальше'}</button>`;
+function tokHTML(t){
+  if(t.k==='v')return Q[t.id].s;
+  if(t.k==='n')return `<span class="n">${t.v}</span>`;
+  if(t.k==='op')return `<span class="op">${{'+':'+','-':'−','*':'·','/':'/'}[t.v]}</span>`;
+  if(t.k==='sq')return '<sup>2</sup>';
+  if(t.k==='rt')return '<span class="n">√</span>';
+  return `<span class="n">${t.k}</span>`;
+}
+function whatifHTML(q){
+  return `<p class="qtext">${q.text}</p>
+  <div class="opts">${q.opts.map((o,i)=>{let cls='';if(sess.answered){if(o===q.correct)cls='right';else if(i===q.chosen)cls='wrong';}
+    return `<button class="opt ${cls}" data-act="opt" data-i="${i}" ${sess.answered?'disabled':''}>${q.noCap?o:cap(o)}</button>`;}).join('')}</div>
+  ${sess.answered?fbHTML(q.chosenOk?'ok':'bad',q.chosenOk?'Верно':'Не совсем',q.expl)+nextBtn():''}`;
+}
+const KEYS=[['op:*','·','умножить'],['op:/','/','разделить'],['op:+','+','плюс'],['op:-','−','минус'],['(:','(','открыть скобку'],['):',')','закрыть скобку'],['sq:','x²','в квадрат'],['rt:','√','корень'],['n:1','1','один'],['n:2','2','два'],['del:','⌫','стереть']];
+function explainHTML(q){
+  const f=q.f,t=q.t,fb=q.fb;let x='';
+  if(fb.kind==='final')x+=`<h3>Где ошибка</h3><p>Ты записал: <span class="fx">${Q[t].s}<span class="eq">=</span>${fb.toks.map(tokHTML).join('')}</span></p>${fb.msg}`;
+  x+=`<h3>Правильный ответ</h3><p>${eqF(f,t)}</p>`;
+  if(t!==f.lhs)x+=`<p>Он получается из исходной формулы ${eqF(f,f.lhs)}: величину ${sym(t)} оставляют одну в левой части, а остальные переносят вправо.</p>`;
+  x+=`<h3>Суть формулы</h3><p>${f.about}</p>`;
+  x+=`<h3>Что можно найти</h3><p>${f.use}</p><ul class="forms">${varsOf(f).map(v=>`<li>${eqF(f,v)}<span>${nm(f,v)}</span></li>`).join('')}</ul>`;
+  return fbHTML('final','Разберём вместе',x);
+}
+function buildHTML(q){
+  const expr=q.toks.length?q.toks.map(tokHTML).join(''):'<span class="ph">собери из блоков ниже</span>';
+  let out=`${buildHead(q)}
+  <div class="sheet build"><span class="fx big">${Q[q.t].s}<span class="eq">=</span>${expr}</span></div>`;
+  if(sess.answered){
+    out+=q.fb.kind==='ok'
+      ?(q.task?fbHTML('ok',q.wrongs?'Получилось':'Верно с первой попытки',taskOkHTML(q)):fbHTML('ok',q.wrongs?'Получилось':'Верно',`<p>Например, так: ${eqF(q.f,q.t)}</p><p>Засчитывается любая равносильная запись.</p>`))
+      :(q.task?taskExplainHTML(q):explainHTML(q));
+    return out+nextBtn();
+  }
+  if(q.fb&&q.fb.kind==='bad'){
+    const lvl1=q.wrongs===1;
+    return out+fbHTML('bad',lvl1?'Есть ошибка':'Подсказка',q.fb.msg+`<p class="small">${lvl1?'Попробуй ещё раз. Если снова не выйдет, подскажу подробнее.':'Если и сейчас не получится, покажу ответ с разбором.'}</p>`)
+      +`<button class="btn wide next" data-act="fix">Исправить</button>
+    ${q.reported?'':'<button class="link" data-act="report">Я считаю, что ответ верный</button>'}`;
+  }
+  if(q.fb&&q.fb.kind==='soft')out+=fbHTML('note','Подсказка',`<p>${q.fb.msg}</p>`);
+  out+=`<p class="palabel">Величины</p><div class="pal">${q.palette.map(id=>`<button class="key v" data-act="tok" data-k="v:${id}" aria-label="${nm(q.f,id)}" title="${nm(q.f,id)}${Q[id].u?', '+Q[id].u:''}">${Q[id].s}</button>`).join('')}</div>
+  <p class="palabel">Знаки и числа</p><div class="pal">
+    ${KEYS.map(([k,l,a])=>`<button class="key o" data-act="${k==='del:'?'del':'tok'}" data-k="${k}" aria-label="${a}">${l}</button>`).join('')}
+  </div>
+  <div class="acts"><button class="btn primary" data-act="check" ${q.toks.length?'':'disabled'}>Проверить</button><button class="btn" data-act="reveal">Не знаю</button></div>
+  ${q.wrongs?`<p class="hint">Попытка ${q.wrongs+1} из 3</p>`:''}`;
+  return out;
+}
+function verdictHTML(q){
+  let out=`<p class="qtext"><span class="fname">${q.f.name}.</span> Эта запись верна?</p>
+  <div class="sheet"><span class="big">${q.shownHTML}</span></div>`;
+  if(!sess.answered)return out+`<div class="two"><button class="btn" data-act="verdict" data-v="ok">Верна</button><button class="btn" data-act="verdict" data-v="bad">Есть ошибка</button></div>`;
+  const title=q.chosenOk?(q.wrong?'Верно, здесь ошибка':'Верно, формула правильная'):(q.wrong?'Здесь есть ошибка':'Формула правильная');
+  return out+fbHTML(q.chosenOk?'ok':'bad',title,q.expl)+nextBtn();
+}
+function qHTML(){
+  const q=sess.q,pct=Math.round(sess.i/sess.n*100);
+  const body=q.opts?whatifHTML(q):q.toks?buildHTML(q):verdictHTML(q);
+  return `<div class="qtop"><button class="link" data-act="quit">Закончить</button><span class="count">Вопрос ${sess.i+1} из ${sess.n}</span></div>
+  <div class="bar" aria-hidden="true"><span style="width:${pct}%"></span></div>
+  ${q.boss?'':`<p class="modename">${MODEN[q.mode]}</p>`}${body}`;
+}
+function endHTML(){
+  const wrong=sess.wrong.map(id=>F.find(f=>f.id===id));
+  return `<header class="head"><span class="logo">FizHub</span></header>
+  <p class="endscore">${sess.score} из ${sess.done}</p>
+  <p class="lead" style="margin:0">${sess.done===0?'Ни одного ответа в этой тренировке.':sess.score===sess.done?'Все ответы верные с первой попытки.':'Верных ответов с первой попытки.'}</p>
+  ${endExtraHTML()}
+  ${wrong.length?`<h2>Эти формулы вернутся раньше</h2><ul class="endlist">${wrong.map(f=>`<li>${f.name}</li>`).join('')}</ul>`:''}
+  <div class="stack"><button class="btn primary wide" data-act="again">${sess.mode==='boss'?'К задачам-боссам':'Ещё тренировка'}</button><button class="btn wide" data-act="home">На главную</button></div>`;
+}
+function refHTML(){
+  const now=Date.now();
+  const seg=`<div class="seg" role="tablist"><button role="tab" aria-selected="${refTab==='f'}" class="${refTab==='f'?'on':''}" data-act="reftab" data-id="f">Формулы</button><button role="tab" aria-selected="${refTab==='u'}" class="${refTab==='u'?'on':''}" data-act="reftab" data-id="u">Единицы</button><button role="tab" aria-selected="${refTab==='t'}" class="${refTab==='t'?'on':''}" data-act="reftab" data-id="t">Задачи</button></div>`;
+  if(refTab==='t')return `<h1 class="title">Справочник</h1>${seg}<p class="lead">Разборы задач из режима «Ответ в общем виде», которые ты уже решил или разобрал.</p><div class="ref">${refTasksHTML()}</div>`;
+  if(refTab==='u')return `<h1 class="title">Справочник</h1>${seg}<p class="lead">Приставки, переводы в СИ и из чего состоят единицы.</p><div class="ref">${refUnitsHTML()}</div>`;
+  return `<h1 class="title">Справочник</h1>${seg}<p class="lead">Все формулы тренажёра с величинами и единицами.</p><div class="ref">
+  ${TOPICS.map(t=>`<h2>${t.n}</h2>${F.filter(f=>f.topic===t.id).map(f=>{
+    const p=prog(f.id),seen=!!S.prog[f.id];
+    const st=!seen?['','Новая']:p.lv>=3?['learned','Выучена']:p.next<=now?['due','Пора повторить']:['','Учу'];
+    const vars=fVars(f);
+    return `<div class="fitem"><div class="fhead"><span class="fname">${f.name}</span><span class="fstate ${st[0]}">${st[1]}</span></div>
+      ${eqF(f,f.lhs)}
+      <p class="about">${f.about}</p>
+      <ul class="legend">${vars.map(v=>`<li>${sym(v)} — ${nm(f,v)}${Q[v].u?', '+Q[v].u:''}</li>`).join('')}</ul></div>`;}).join('')}`).join('')}</div>`;
+}
+const I_TRAIN='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="13.5" r="8"/><circle cx="10.5" cy="13.5" r="4.5"/><circle cx="10.5" cy="13.5" r="1" fill="currentColor"/><path d="M10.5 13.5 19 5"/><path d="M19 5h3M19 5V2"/><path d="M17 7h2.5M17 7V4.5"/></svg>';
+const I_BOOK='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>';
+const navHTML=()=>`<nav class="nav"><button data-act="nav" data-v="home" class="${view==='home'||view==='bosses'?'on':''}">${I_TRAIN}<span>Тренировка</span></button><button data-act="nav" data-v="ref" class="${view==='ref'?'on':''}">${I_BOOK}<span>Справочник</span></button></nav>`;
+function render(){
+  let h='';
+  if(view==='home')h=homeHTML()+navHTML();
+  else if(view==='ref')h=refHTML()+navHTML();
+  else if(view==='q')h=qHTML();
+  else if(view==='end')h=endHTML();
+  else if(view==='bosses')h=bossesHTML()+navHTML();
+  const oldPop=root.querySelector?root.querySelector('.pop'):null,popTop=oldPop?oldPop.scrollTop:0;
+  root.innerHTML=h;
+  if(oldPop&&sheet){const np=root.querySelector('.pop');if(np)np.scrollTop=popTop;}
+  if(inTG&&tgAtLeast('6.1')){if(view==='home'&&!sheet)tg.BackButton.hide();else tg.BackButton.show();}
+}
+if(inTG&&tgAtLeast('6.1'))tg.BackButton.onClick(()=>{
+  if(sheet){sheet=null;render();return;}
+  if(view==='q'){view=sess.done>0?'end':'home';}else view='home';
+  render();window.scrollTo(0,0);
+});
+let toastT=null;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2600);}
+
+/* ===== Действия ===== */
+root.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;
+  const a=b.dataset.act,q=sess&&sess.q;
+  switch(a){
+    case 'start':if(b.dataset.mode==='life'&&!lifeLeft()){toast('По выбранным темам все вопросы пройдены. Они вернутся для повторения через 1–2 дня');break;}if(b.dataset.mode==='boss'){view='bosses';render();window.scrollTo(0,0);break;}startSession(b.dataset.mode);window.scrollTo(0,0);break;
+    case 'topic':{const id=b.dataset.id;
+      if(id==='all')S.topics=TOPICS.map(t=>t.id);
+      else if(allTopics())S.topics=[id];
+      else if(S.topics.includes(id)){if(S.topics.length===1){toast('Нужна хотя бы одна тема');return;}S.topics=S.topics.filter(x=>x!==id);}
+      else S.topics=TOPICS.map(t=>t.id).filter(x=>x===id||S.topics.includes(x));
+      save();render();break;}
+    case 'mode':S.mode=b.dataset.id;save();sheet=null;render();break;
+    case 'sheet':sheet=b.dataset.id;sheetAnim=true;render();sheetAnim=false;break;
+    case 'close':sheet=null;render();break;
+    case 'noop':break;
+    case 'reset':if(!resetArm){resetArm=true;render();setTimeout(()=>{if(resetArm){resetArm=false;if(view==='home')render();}},4000);}
+      else{S=fresh();save();resetArm=false;render();toast('Прогресс стёрт');}break;
+    case 'boss':startSession('boss',b.dataset.id);window.scrollTo(0,0);break;
+    case 'gogeneral':S.mode='general';save();view='home';render();window.scrollTo(0,0);break;
+    case 'reftab':refTab=b.dataset.id;render();window.scrollTo(0,0);break;
+    case 'nav':sheet=null;view=b.dataset.v;render();window.scrollTo(0,0);break;
+    case 'quit':view=sess.done>0?'end':'home';render();window.scrollTo(0,0);break;
+    case 'opt':{const i=+b.dataset.i;q.chosen=i;q.chosenOk=q.opts[i]===q.correct;sess.answered=true;finish(q.chosenOk);render();break;}
+    case 'verdict':{q.chosenOk=(b.dataset.v==='bad')===q.wrong;sess.answered=true;finish(q.chosenOk);render();break;}
+    case 'tok':{haptic('tap');const [kind,val]=b.dataset.k.split(':');let t;
+      if(kind==='v')t={k:'v',id:val};else if(kind==='n')t={k:'n',v:+val};else if(kind==='op')t={k:'op',v:val};else t={k:kind};
+      q.toks.push(t);if(q.fb&&q.fb.kind==='soft')q.fb=null;render();break;}
+    case 'del':q.toks.pop();if(q.fb&&q.fb.kind==='soft')q.fb=null;render();break;
+    case 'check':{const r=checkBuild(q);
+      if(r.soft){q.fb={kind:'soft',msg:r.msg};}
+      else if(r.ok){q.fb={kind:'ok'};taskDone(q);if(!q.counted){q.counted=true;finish(true);}sess.answered=true;}
+      else{q.wrongs=(q.wrongs||0)+1;if(!q.counted){q.counted=true;finish(false);}
+        if(q.wrongs>=3){taskSeen(q);q.fb={kind:'final',msg:r.msg,toks:q.toks.slice()};sess.answered=true;}
+        else q.fb={kind:'bad',msg:q.wrongs===1?r.light:r.msg};}
+      render();break;}
+    case 'fix':q.fb=null;render();break;
+    case 'reveal':if(!q.counted){q.counted=true;finish(false);}taskSeen(q);q.fb={kind:'reveal'};sess.answered=true;render();break;
+    case 'report':S.reports.push({formula:q.fid||q.f.id,target:q.t,answer:q.toks.map(t=>t.k==='v'?t.id:t.k==='n'?t.v:t.v||t.k).join(' '),date:new Date().toISOString()});
+      save();q.reported=true;render();toast('Сообщение сохранено на этом устройстве');break;
+    case 'next':sess.i++;nextQ();window.scrollTo(0,0);break;
+    case 'again':if(sess.mode==='life'&&!lifeLeft()){view='home';render();toast('По выбранным темам все вопросы пройдены. Выбери другие темы или режим');break;}if(sess.mode==='boss'){view='bosses';render();window.scrollTo(0,0);break;}startSession(sess.mode);window.scrollTo(0,0);break;
+    case 'home':view='home';render();window.scrollTo(0,0);break;
+  }
+});
+if(document.addEventListener)document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheet){sheet=null;render();}});
+render();
+</script>
+</body>
+</html>
